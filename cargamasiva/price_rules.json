@@ -1,0 +1,17 @@
+[
+  { 
+    "id": "regla_precio_fijo", 
+    "name": "Precio Fijo de Bebida", 
+    "basePrices": [{ "count": 1, "price": 0.00 }] 
+  },
+  { 
+    "id": "regla_licuado_1_ing", 
+    "name": "Licuado 1 Ingrediente", 
+    "basePrices": [{ "count": 1, "price": 30.00 }]
+  },
+  { 
+    "id": "regla_licuado_2_ing", 
+    "name": "Licuado Combinado", 
+    "basePrices": [{ "count": 2, "price": 35.00 }]
+  }
+]

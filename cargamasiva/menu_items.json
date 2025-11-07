@@ -1,0 +1,14 @@
+[
+  {"id": "americano", "name": "Americano", "category": "Bebidas Calientes", "variants": [{"name": "Chico", "price": 30.00}, {"name": "Mediano", "price": 35.00}], "modifierGroups": ["bebida_topping_caliente"]},
+  {"id": "capuccino", "name": "Capuccino", "category": "Bebidas Calientes", "variants": [{"name": "Chico", "price": 25.00}, {"name": "Mediano", "price": 30.00}], "modifierGroups": ["leche_opciones", "bebida_topping_caliente"]},
+  {"id": "tisanas", "name": "Tisanas", "category": "Bebidas Calientes", "variants": [{"name": "Chico", "price": 40.00}, {"name": "Mediano", "price": 50.00}], "modifierGroups": ["sabor_tisana", "bebida_topping_caliente"]},
+  {"id": "te", "name": "Té", "category": "Bebidas Calientes", "variants": [{"name": "Chico", "price": 25.00}, {"name": "Mediano", "price": 30.00}], "modifierGroups": ["sabor_te", "bebida_topping_caliente"]},
+  {"id": "chocolate", "name": "Chocolate", "category": "Bebidas Calientes", "variants": [{"name": "Chico", "price": 35.00}, {"name": "Mediano", "price": 40.00}], "modifierGroups": ["leche_opciones", "bebida_topping_caliente"]},
+  {"id": "chocolate_blanco", "name": "Chocolate Blanco", "category": "Bebidas Calientes", "variants": [{"name": "Chico", "price": 35.00}, {"name": "Mediano", "price": 40.00}], "modifierGroups": ["leche_opciones", "bebida_topping_caliente"]},
+  {"id": "vainilla_latte", "name": "Vainilla Latte", "category": "Bebidas Calientes", "variants": [{"name": "Chico", "price": 35.00}, {"name": "Mediano", "price": 40.00}], "modifierGroups": ["leche_opciones", "bebida_topping_caliente"]},
+  {"id": "taro_latte", "name": "Taro Latte", "category": "Bebidas Calientes", "variants": [{"name": "Chico", "price": 35.00}, {"name": "Mediano", "price": 40.00}], "modifierGroups": ["leche_opciones", "bebida_topping_caliente"]},
+  {"id": "matcha_latte", "name": "Matcha Latte", "category": "Bebidas Calientes", "variants": [{"name": "Chico", "price": 35.00}, {"name": "Mediano", "price": 40.00}], "modifierGroups": ["leche_opciones", "bebida_topping_caliente"]},
+  {"id": "moka", "name": "Moka", "category": "Bebidas Calientes", "variants": [{"name": "Chico", "price": 35.00}, {"name": "Mediano", "price": 40.00}], "modifierGroups": ["leche_opciones", "bebida_topping_caliente"]},
+  {"id": "latte", "name": "Latte", "category": "Bebidas Calientes", "variants": [{"name": "Chico", "price": 35.00}, {"name": "Mediano", "price": 40.00}], "modifierGroups": ["leche_opciones", "bebida_topping_caliente"]},
+  {"id": "bublee_tee_sencillo", "name": "Bublee Tee Sencillo", "category": "Bebidas Frias", "price": 95.00, "modifierGroups": ["bublee_topping", "bebida_topping_frio"]} 
+]

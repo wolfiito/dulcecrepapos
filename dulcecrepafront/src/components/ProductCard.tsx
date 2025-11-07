@@ -1,41 +1,66 @@
 // src/components/ProductCard.tsx
 
-import type { MenuItem, FixedPriceItem, VariantPriceItem } from '../types/menu';
+import type { MenuItem, MenuGroup } from '../types/menu';
 
-interface Props {
-  item: MenuItem;
-  onClick: (item: MenuItem) => void; 
+// --- Type Guards ---
+function isGroup(item: MenuItem | MenuGroup): item is MenuGroup {
+    return 'level' in item;
+}
+function isVariantPrice(item: MenuItem | MenuGroup): item is (MenuItem & { variants: any }) {
+    return 'variants' in item;
+}
+function isFixedPrice(item: MenuItem | MenuGroup): item is (MenuItem & { price: number }) {
+    return 'price' in item;
 }
 
-function isFixedPrice(item: MenuItem): item is FixedPriceItem {
-  return 'price' in item; 
-}
-function isVariantPrice(item: MenuItem): item is VariantPriceItem {
-  return 'variants' in item;
+// --- Iconos ---
+function getIconForItem(item: MenuItem | MenuGroup): string {
+    if (isGroup(item)) { 
+        if (item.rules_ref) return ''; 
+        if (item.id.includes('dulces')) return '🥞';
+        if (item.id.includes('saladas')) return '🥓';
+        if (item.id.includes('bebidas_frias')) return '🧊';
+        if (item.id.includes('bebidas_calientes')) return '☕';
+        if (item.id.includes('bebidas')) return '🥤';
+        if (item.id.includes('postres')) return '🍰';
+        return '➡️';
+    }
+    if (item.category.includes('Calientes')) return '';
+    if (item.id.includes('bublee')) return '';
+    if (item.category.includes('Frias')) return '';
+    if (item.category.includes('Dulces')) return '';
+    if (item.category.includes('Saladas')) return '';
+    if (item.category.includes('Postres')) return '';
+    return '🍽️';
 }
 
-function getDisplayPrice(item: MenuItem): string {
-  if (isFixedPrice(item)) {
-    return `$${item.price.toFixed(2)}`;
-  }
-  if (isVariantPrice(item)) {
-    const minPrice = item.variants.reduce((min, v) => Math.min(min, v.price), Infinity);
-    return `Desde $${minPrice.toFixed(2)}`;
-  }
-  return 'N/A';
+// --- Precio ---
+function getDisplayPrice(item: MenuItem | MenuGroup): string {
+    if (isFixedPrice(item)) {
+      return `$${item.price.toFixed(2)}`;
+    }
+    
+    return '';
 }
 
-export function ProductCard({ item, onClick }: Props) {
-  
-  return (
-    // Aplicamos las clases CSS
-    <div className="card-base card-item" onClick={() => onClick(item)}>
-      <h4>{item.name}</h4>
-      <p>{getDisplayPrice(item)}</p>
-      {isVariantPrice(item) && <small>Elige tamaño</small>}
-      {(isFixedPrice(item) && item.modifierGroups && item.modifierGroups.length > 0) && (
-        <small>Personalizar</small>
-      )}
-    </div>
-  );
+interface ProductCardProps {
+  item: MenuItem | MenuGroup;
+  onClick: () => void;
+}
+
+export const ProductCard: React.FC<ProductCardProps> = ({ item, onClick }) => {
+    
+    let className = 'card-base';
+    if (isGroup(item)) {
+        className += item.rules_ref ? ' card-rule' : ' card-group';
+    } else {
+        className += ' card-item';
+    }
+
+    return (
+        <div className={className} onClick={onClick}>
+            <span style={{fontSize: '2.5em', marginBottom: '10px'}}>{getIconForItem(item)}</span>
+            <h4 style={{margin: 0}}>{item.name.split('(')[0]}</h4>
+        </div>
+    );
 }

@@ -15,13 +15,9 @@ const ICEE_SABORES = "icee_sabores";
 const LICUADO_INGREDIENTES = "licuado_ingredientes";
 const CREPA_DULCE_BASE = "crepa_dulce_base";
 const CREPA_SALADA_BASE = "crepa_salada_base";
-
-// Grupos de Topping de Crepa (para lógica exclusiva)
 const CREPA_TOPPING_SALSA = "crepa_topping_salsa";
 const CREPA_TOPPING_SECO = "crepa_topping_seco";
 
-// --- CORRECCIÓN DE TIPO (Error 3) ---
-// Definimos los grupos exclusivos en el scope del componente
 const exclusiveBaseGroups = [FRA_SABORES_BASE, MALTEADA_SABORES, FRAPPE_ESP_SABORES, SODA_SABORES, CHAMOYADA_SABORES, ICEE_SABORES];
 const exclusiveGroups = [...exclusiveBaseGroups, BEBIDA_LECHE_GRUPO, CREPA_TOPPING_SALSA, CREPA_TOPPING_SECO];
 
@@ -94,7 +90,6 @@ export function CustomizeCrepeModal({ isOpen, onClose, group, allModifiers, allP
             isRequired: true
         });
     }
-
     if (extraGroups.length > 0) {
         allSteps.push({
             name: extraGroups.includes(BEBIDA_LECHE_GRUPO) ? 'Tipo de Leche' : 'Extras Adicionales',
@@ -102,17 +97,17 @@ export function CustomizeCrepeModal({ isOpen, onClose, group, allModifiers, allP
             isRequired: extraGroups.includes(BEBIDA_LECHE_GRUPO) 
         });
     }
-
     if (toppingGroups.length > 0) {
-        allSteps.push({
-            name: 'Toppings y Finales',
-            groups: toppingGroups,
-            isRequired: false
-        });
+        // Lógica para Crepas: 2 tipos de toppings gratis
+        if (group.id.includes('dulces') || group.id.includes('postre')) {
+             allSteps.push({ name: 'Topping de Salsa (1 Gratis)', groups: [CREPA_TOPPING_SALSA], isRequired: false });
+             allSteps.push({ name: 'Topping Seco (1 Gratis)', groups: [CREPA_TOPPING_SECO], isRequired: false });
+        } else {
+            // Lógica para Bebidas Frías
+            allSteps.push({ name: 'Toppings y Finales', groups: toppingGroups, isRequired: false });
+        }
     }
-
-    return allSteps;
-
+    return allSteps.filter(s => s.groups.length > 0); // Filtra pasos que no tienen grupos asignados
   }, [group]);
 
   const currentStepInfo = steps[step];
@@ -239,7 +234,6 @@ export function CustomizeCrepeModal({ isOpen, onClose, group, allModifiers, allP
         const newMap = new Map(prev);
         
         if (isExclusive) { 
-            // *** CORRECCIÓN ***: Usar 'allModifiers' (estado estable) en lugar de 'relevantModifiers' (memo)
             allModifiers 
                 .filter(mod => mod.group === modifier.group)
                 .forEach(mod => newMap.delete(mod.id));
@@ -261,7 +255,6 @@ export function CustomizeCrepeModal({ isOpen, onClose, group, allModifiers, allP
   if (!isOpen || !group || !currentStepInfo) return null;
   
   const isAddButtonDisabled = !isValid || (currentPrice === 0 && !group.id.includes('licuados'));
-
   const isBaseGroupExclusive = group.base_group ? exclusiveBaseGroups.includes(group.base_group) : false;
 
   return (
@@ -311,7 +304,8 @@ export function CustomizeCrepeModal({ isOpen, onClose, group, allModifiers, allP
                               cursor: shouldBeDisabled ? 'not-allowed' : 'pointer'
                           }}
                       >
-                          {mod.name}
+                          {mod.name} 
+                          {mod.price > 0 && <span className="price-tag">(+${mod.price.toFixed(2)})</span>}
                       </button>
                   );
               })}

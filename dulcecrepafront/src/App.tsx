@@ -1,4 +1,4 @@
-// src/App.tsx (Reemplazo Completo)
+// src/App.tsx (Reemplazo Completo - Acordeón + Grid + Corrección de Scope)
 
 import { useEffect, useState, useMemo } from 'react';
 import { 
@@ -18,6 +18,7 @@ import type {
 } from './types/menu'; 
 import { CustomizeCrepeModal } from './components/CustomizeCrepeModal'; 
 import { CustomizeVariantModal } from './components/CustomizeVariantModal'; 
+import { ProductCard } from './components/ProductCard'; // <-- Importamos ProductCard
 
 // --- Tipos de Vista ---
 type View = 'menu' | 'ticket';
@@ -30,6 +31,30 @@ function isFixedPrice(item: MenuItem): item is FixedPriceItem {
 function isVariantPrice(item: MenuItem): item is VariantPriceItem {
   return 'variants' in item;
 }
+
+// --- ¡AQUÍ ESTÁ LA CORRECCIÓN! ---
+// (Función movida al scope superior para que todos los componentes la vean)
+function getIconForItem(item: MenuItem | MenuGroup): string {
+    if ('level' in item) { // Es un Grupo
+        if (item.rules_ref) return '✨'; 
+        if (item.id.includes('dulces')) return '🥞';
+        if (item.id.includes('saladas')) return '🥓';
+        if (item.id.includes('bebidas_frias')) return '🧊';
+        if (item.id.includes('bebidas_calientes')) return '☕';
+        if (item.id.includes('bebidas')) return '🥤';
+        if (item.id.includes('postres')) return '🍰';
+        return '➡️';
+    }
+    // Es un Item
+    if (item.category.includes('Calientes')) return '☕';
+    if (item.id.includes('bublee')) return '🧋';
+    if (item.category.includes('Frias')) return '🧊';
+    if (item.category.includes('Dulces')) return '🥞';
+    if (item.category.includes('Saladas')) return '🥓';
+    if (item.category.includes('Postres')) return '🍮';
+    return '🍽️';
+}
+
 
 // --- Componente Principal ---
 function App() {
@@ -45,17 +70,15 @@ function App() {
   const [view, setView] = useState<View>('menu');
   const [ticketItems, setTicketItems] = useState<TicketItem[]>([]);
   const [currentOrderMode, setCurrentOrderMode] = useState<OrderMode>('Para Llevar');
-  const [currentOrderNumber, setCurrentOrderNumber] = useState(101); 
+  const [currentOrderNumber, setCurrentOrderNumber] = useState(101); // (Placeholder)
 
   // --- ESTADOS DE MODALES ---
   const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
   const [groupToCustomize, setGroupToCustomize] = useState<MenuGroup | null>(null);
   const [isVariantModalOpen, setIsVariantModalOpen] = useState(false);
   const [itemToSelectVariant, setItemToSelectVariant] = useState<MenuItem | null>(null);
+  const [currentGroup, setCurrentGroup] = useState<MenuGroup | null>(null);
 
-  // --- ESTADO DE NAVEGACIÓN (LEVANTADO) ---
-  const [currentGroup, setCurrentGroup] = useState<MenuGroup | null>(null); 
-  
   useEffect(() => {
     const fetchMenuData = async () => {
       try {
@@ -72,11 +95,9 @@ function App() {
         const rules = rulesQuery.docs.map((doc: QueryDocumentSnapshot<DocumentData>) => ({ id: doc.id, ...doc.data() })) as PriceRule[];
         
         setAllData({ groups, items, modifiers, rules });
-
-        // Establecer el grupo 'root' al cargar
+        
         const defaultGroup = groups.find(g => g.id === 'root') || null; 
         setCurrentGroup(defaultGroup);
-        
       } catch (error) {
         console.error("Error al cargar datos iniciales de Firebase:", error);
       }
@@ -84,7 +105,6 @@ function App() {
     fetchMenuData();
   }, []);
 
-  // --- LÓGICA DE NAVEGACIÓN (AHORA VIVE EN APP) ---
   const handleNavigate = (groupId: string) => {
     const nextGroup = allData.groups.find(g => g.id === groupId);
     if (nextGroup) setCurrentGroup(nextGroup);
@@ -95,44 +115,45 @@ function App() {
       else setCurrentGroup(allData.groups.find(g => g.id === 'root') || null);
   };
 
+  // --- LÓGICA DE CLIC EN PRODUCTO/GRUPO (Simplificada para acordeón) ---
   const handleProductClick = (item: MenuItem | MenuGroup) => {
-      if ('level' in item) {
+      if ('level' in item) { // Es un Grupo
           const group = item as MenuGroup;
-          if (group.rules_ref) {
+          if (group.rules_ref) { // Es una Regla (Arma tu...)
               setGroupToCustomize(group);
               setIsCustomModalOpen(true); 
               return;
           }
           handleNavigate(group.id);
           return;
-      }
-      const menuItem = item as MenuItem;
-      if (isVariantPrice(menuItem) || (isFixedPrice(menuItem) && menuItem.modifierGroups && menuItem.modifierGroups.length > 0)) {
-          setItemToSelectVariant(menuItem);
-          setIsVariantModalOpen(true); 
-          return;
-      }
-      if (isFixedPrice(menuItem)) {
-          const newTicketItem: TicketItem = {
-              id: Date.now().toString(), 
-              baseName: menuItem.name,
-              finalPrice: menuItem.price,
-              type: 'FIXED',
-              details: { itemId: menuItem.id, selectedModifiers: [] }
-          };
-          setTicketItems(prevItems => [...prevItems, newTicketItem]);
-          // --- CORRECCIÓN AQUÍ TAMBIÉN ---
-          handleNavigate('root'); // Volver al inicio después de añadir un item fijo
-          return;
+          // (Si es un grupo de Nivel 2, como "Especiales Dulces", el acordeón lo maneja)
+      } else { // Es un Item
+          const menuItem = item as MenuItem;
+          if (isVariantPrice(menuItem) || (isFixedPrice(menuItem) && menuItem.modifierGroups && menuItem.modifierGroups.length > 0)) {
+              setItemToSelectVariant(menuItem);
+              setIsVariantModalOpen(true); 
+              return;
+          }
+          if (isFixedPrice(menuItem)) {
+              const newTicketItem: TicketItem = {
+                  id: Date.now().toString(), 
+                  baseName: menuItem.name,
+                  finalPrice: menuItem.price,
+                  type: 'FIXED',
+                  details: { itemId: menuItem.id, selectedModifiers: [] }
+              };
+              setTicketItems(prevItems => [...prevItems, newTicketItem]);
+              handleNavigate('root');
+              return;
+          }
       }
   };
 
-  // --- LÓGICA DE MODALES (CORREGIDA) ---
+  // --- LÓGICA DE MODALES ---
   const handleCloseCustomModal = () => {
     setIsCustomModalOpen(false);
     setGroupToCustomize(null);
   };
-
   const handleCloseVariantModal = () => {
     setIsVariantModalOpen(false);
     setItemToSelectVariant(null);
@@ -144,10 +165,8 @@ function App() {
     if (item.type === 'CUSTOM') handleCloseCustomModal();
     else handleCloseVariantModal();
 
-    // --- ¡AQUÍ ESTÁ LA CORRECCIÓN PRINCIPAL! ---
-    // Regresa a la vista de menú Y resetea la navegación al 'root'.
     setView('menu');
-    handleNavigate('root'); 
+    handleNavigate('root');
   };
   
   // --- LÓGICA DE ORDEN (AUTO-INCREMENTO) ---
@@ -222,12 +241,10 @@ function App() {
       {/* Vista de Menú */}
       <div className="view" style={{ display: view === 'menu' ? 'flex' : 'none' }}>
         <MenuScreen
-          // Pasa los datos
           allData={allData}
-          currentGroup={currentGroup}
+          currentGroup={currentGroup} 
           currentOrderNumber={currentOrderNumber}
           currentOrderMode={currentOrderMode}
-          // Pasa los controladores
           onSetOrderMode={setCurrentOrderMode}
           onProductClick={handleProductClick}
           onGoBack={handleGoBack}
@@ -241,6 +258,7 @@ function App() {
           ticketItems={ticketItems}
           totalTicket={totalTicket}
           onSubmitOrder={handleSubmitOrder}
+          currentOrderNumber={currentOrderNumber}
           onNavigate={setView}
         />
       </div>
@@ -269,7 +287,7 @@ function App() {
   );
 }
 
-// --- PANTALLA DE MENÚ (Sub-componente) ---
+// --- PANTALLA DE MENÚ (Sub-componente con Acordeón) ---
 
 interface MenuScreenProps {
   allData: { groups: MenuGroup[], items: MenuItem[] };
@@ -288,13 +306,14 @@ const MenuScreen: React.FC<MenuScreenProps> = ({
   currentOrderMode, 
   onSetOrderMode,
   onProductClick,
-  onGoBack
+  onGoBack 
 }) => {
   
-  // Los cálculos ahora viven aquí, usando los props
+  // Lógica de "Drill-Down" (navegación)
   const groupsToShow = useMemo(() => {
-    if (currentGroup?.id === 'root') return allData.groups.filter(g => g.parent === 'root');
-    return allData.groups.filter(g => g.parent === currentGroup?.id);
+    if (!currentGroup) return [];
+    if (currentGroup.id === 'root') return allData.groups.filter(g => g.parent === 'root');
+    return allData.groups.filter(g => g.parent === currentGroup.id);
   }, [currentGroup, allData.groups]);
 
   const itemsToShow = useMemo(() => {
@@ -305,44 +324,54 @@ const MenuScreen: React.FC<MenuScreenProps> = ({
     }
     return [];
   }, [currentGroup, allData.items]);
+  
+  const getTitle = () => {
+    if (!currentGroup) return "Cargando...";
+    if (currentGroup.id === 'root') return "Menú Principal";
+    return currentGroup.name;
+  }
 
   return (
     <>
       <header className="header-bar">
-        <span className="header-order-id">Orden #{currentOrderNumber.toString().padStart(3, '0')}</span>
-        {(['Mesa 1', 'Mesa 2', 'Para Llevar'] as OrderMode[]).map(mode => (
-          <button 
-            key={mode} 
-            className={`btn-order-type ${currentOrderMode === mode ? 'active' : ''}`}
-            onClick={() => onSetOrderMode(mode)}
-          >
-            {mode}
-          </button>
-        ))}
+        <img src="/logo.png" alt="Dulce Crepa" className="header-logo" /> 
+        <div className="order-type-group">
+          {(['Mesa 1', 'Mesa 2', 'Para Llevar'] as OrderMode[]).map(mode => (
+            <button 
+              key={mode} 
+              className={`btn-order-type ${currentOrderMode === mode ? 'active' : ''}`}
+              onClick={() => onSetOrderMode(mode)}
+            >
+              {mode}
+            </button>
+          ))}
+        </div>
       </header>
 
       <div className="menu-content">
         <div className="menu-header">
             {currentGroup && currentGroup.parent && (
-                <button onClick={onGoBack} className="btn-back">&larr;</button>
+                <button onClick={onGoBack} className="btn-back">
+                  <IconBack />
+                </button>
             )}
-            <h2>{currentGroup ? currentGroup.name : 'Cargando Menú...'}</h2>
+            {/* <h2>{getTitle()}</h2> */}
         </div>
 
-        <div className="menu-list">
+        <div className="menu-grid">
             {groupsToShow.map(group => (
-                <MenuButton 
+                <ProductCard 
                   key={group.id} 
                   item={group} 
                   onClick={() => onProductClick(group)} 
                 />
             ))}
-            {itemsToShow.map(item => (
-              <MenuButton 
-                key={item.id} 
-                item={item} 
-                onClick={() => onProductClick(item)} 
-              />
+             {itemsToShow.map(childItem => (
+                <ProductCard 
+                  key={childItem.id} 
+                  item={childItem} 
+                  onClick={() => onProductClick(childItem)} 
+                />
             ))}
         </div>
       </div>
@@ -356,15 +385,19 @@ interface TicketScreenProps {
   ticketItems: TicketItem[];
   totalTicket: number;
   onSubmitOrder: () => void;
+  currentOrderNumber: number;
   onNavigate: (view: View) => void;
 }
 
-const TicketScreen: React.FC<TicketScreenProps> = ({ ticketItems, totalTicket, onSubmitOrder, onNavigate }) => {
+const TicketScreen: React.FC<TicketScreenProps> = ({ ticketItems, totalTicket, onSubmitOrder, currentOrderNumber, onNavigate }) => {
   return (
     <>
       <header className="ticket-header">
-        <button onClick={() => onNavigate('menu')} className="btn-back">&larr;</button>
+        <button onClick={() => onNavigate('menu')} className="btn-back">
+          <IconBack />
+        </button>
         <h2>Pedido Actual</h2>
+        <span className="order-number">#{currentOrderNumber.toString().padStart(3, '0')}</span>
       </header>
       
       <div className="ticket-scroll-area">
@@ -406,7 +439,7 @@ const TicketScreen: React.FC<TicketScreenProps> = ({ ticketItems, totalTicket, o
                 disabled={ticketItems.length === 0}
                 className="btn-submit-order"
             >
-                Cobrar y Enviar a Cocina (${totalTicket.toFixed(2)})
+                Cobrar y Enviar a Cocina
             </button>
         </div>
       </div>
@@ -435,45 +468,45 @@ const BottomNav: React.FC<BottomNavProps> = ({ ticketCount, onNavigate }) => {
   );
 };
 
-// --- BOTÓN DE MENÚ (Sub-componente) ---
-
-function getIconForItem(item: MenuItem | MenuGroup): string {
-    if ('level' in item) { // Es un Grupo
-        if (item.rules_ref) return '✨'; // Arma tu...
-        if (item.id.includes('dulces')) return '🥞';
-        if (item.id.includes('saladas')) return '🥓';
-        if (item.id.includes('bebidas_frias')) return '🧊';
-        if (item.id.includes('bebidas_calientes')) return '☕';
-        if (item.id.includes('bebidas')) return '🥤';
-        if (item.id.includes('postres')) return '🍰';
-        return '➡️';
-    }
-    // Es un Item
-    if (item.category.includes('Calientes')) return '☕';
-    if (item.id.includes('bublee')) return '🧋';
-    if (item.category.includes('Frias')) return '🧊';
-    if (item.category.includes('Dulces')) return '🥞';
-    if (item.category.includes('Saladas')) return '🥓';
-    if (item.category.includes('Postres')) return '🍮';
-    return '🍽️';
+// --- COMPONENTE DE ACORDEÓN (Nuevo) ---
+interface AccordionProps {
+    group: MenuGroup;
+    isActive: boolean;
+    onToggle: () => void;
+    children: React.ReactNode;
 }
-
-interface MenuButtonProps {
-  item: MenuItem | MenuGroup;
-  onClick: () => void;
-}
-
-const MenuButton: React.FC<MenuButtonProps> = ({ item, onClick }) => {
-    let className = 'btn-menu-item';
-    if ('level' in item) {
-        className += item.rules_ref ? ' rule' : ' category';
-    }
+const AccordionCategory: React.FC<AccordionProps> = ({ group, isActive, onToggle, children }) => {
     return (
-        <button className={className} onClick={onClick}>
-            <span className="btn-menu-item-icon">{getIconForItem(item)}</span>
-            {item.name.split('(')[0]}
-        </button>
-    );
+        <div className="accordion-category">
+            <button className={`accordion-header ${isActive ? 'open' : ''}`} onClick={onToggle}>
+                <span className="btn-menu-item-icon">{getIconForItem(group)}</span>
+                <span className="accordion-title">{group.name}</span>
+                <span className="accordion-icon">{isActive ? '−' : '+'}</span>
+            </button>
+            {isActive && (
+                <div className="accordion-content">
+                    {children}
+                </div>
+            )}
+        </div>
+    )
 }
+
+// --- COMPONENTE DE ICONO ---
+const IconBack = () => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    width="24" 
+    height="24" 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="3" 
+    strokeLinecap="round" 
+    strokeLinejoin="round"
+  >
+    <polyline points="15 18 9 12 15 6"></polyline>
+  </svg>
+);
 
 export default App;

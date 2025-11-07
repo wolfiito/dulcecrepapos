@@ -47,6 +47,15 @@ function isVariantPrice(item: MenuItem): item is VariantPriceItem {
   return 'variants' in item;
 }
 
+// Tipo para un paso del asistente
+type WizardStep = {
+    name: string;
+    options: (Modifier | {name: string, price: number})[]; // Puede ser Modifiers o Variants
+    isExclusive: boolean;
+    isRequired: boolean;
+    group: string;
+}
+
 export function CustomizeVariantModal({ isOpen, onClose, item, allModifiers, onAddItem }: Props) {
     if (!item) return null;
     
@@ -85,7 +94,7 @@ export function CustomizeVariantModal({ isOpen, onClose, item, allModifiers, onA
 
     // --- Definición de Pasos del Asistente ---
     const steps = useMemo(() => {
-        const stepList: any[] = []; // Usamos 'any' temporalmente para el tipo de 'options'
+        const stepList: WizardStep[] = [];
         
         if (isVariantPrice(item)) {
             stepList.push({ 
@@ -93,7 +102,7 @@ export function CustomizeVariantModal({ isOpen, onClose, item, allModifiers, onA
                 options: item.variants, 
                 isRequired: true, 
                 group: 'variants',
-                isExclusive: true // <-- Propiedad añadida
+                isExclusive: true
             });
         }
         
@@ -111,9 +120,9 @@ export function CustomizeVariantModal({ isOpen, onClose, item, allModifiers, onA
     // --- Validación de Paso Actual ---
     const isStepValid = useMemo(() => {
         if (!currentStep || !currentStep.isRequired) return true;
-        if (currentStep.group === 'variants') return true; 
+        if (currentStep.group === 'variants') return selectedVariant.price > 0; // Validar que se seleccionó un tamaño
         return Array.from(selectedModifiers.values()).some(mod => mod.group === currentStep.group);
-    }, [currentStep, selectedModifiers]);
+    }, [currentStep, selectedModifiers, selectedVariant]);
 
 
     const handleModifierChange = (modifier: Modifier, isExclusive: boolean) => {
@@ -133,10 +142,6 @@ export function CustomizeVariantModal({ isOpen, onClose, item, allModifiers, onA
     };
 
     const handleAddToTicket = () => {
-        if (!isStepValid) {
-             alert(`Por favor, selecciona una opción para ${currentStep.name}.`);
-             return;
-        }
         const modsArray = Array.from(selectedModifiers.values());
         const newTicketItem: TicketItem = {
             id: Date.now().toString(),
@@ -181,13 +186,13 @@ export function CustomizeVariantModal({ isOpen, onClose, item, allModifiers, onA
                     <h4>Paso {step + 1}: {currentStep.name} {currentStep.isRequired && !isStepValid && '(Obligatorio)'}</h4>
                     <div className="modal-options-grid">
                         
-                        {currentStep.group === 'variants' && (item as VariantPriceItem).variants.map(variant => (
+                        {currentStep.group === 'variants' && (currentStep.options as {name: string, price: number}[]).map(variant => (
                             <button
                                 key={variant.name}
                                 onClick={() => setSelectedVariant(variant)}
                                 className={`btn-modal-option ${selectedVariant.name === variant.name ? 'selected' : ''}`}
                             >
-                                {variant.name}
+                                {variant.name} (${variant.price.toFixed(2)})
                             </button>
                         ))}
                         
@@ -198,6 +203,7 @@ export function CustomizeVariantModal({ isOpen, onClose, item, allModifiers, onA
                                 className={`btn-modal-option ${selectedModifiers.has(mod.id) ? 'selected' : ''}`}
                             >
                                 {mod.name} 
+                                {mod.price > 0 && <span className="price-tag">(+${mod.price.toFixed(2)})</span>}
                             </button>
                         ))}
                     </div>

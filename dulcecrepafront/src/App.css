@@ -1,6 +1,4 @@
-/* src/App.css (Corregido para Mobile-First y Toggle de Vistas) */
-
-/* --- 1. Paleta de Colores (Basada en el menú) --- */
+/* src/App.css (Corregido para Acordeón + Grid) */
 :root {
   --brand-primary: #D9538A; 
   --brand-secondary: #E5739F;
@@ -12,28 +10,22 @@
   --text-secondary: #757575;
   --text-on-brand: #FFFFFF;
   --color-border: #E0E0E0;
-  --color-highlight: #fde8ef; /* Rosa pálido para selección */
+  --color-highlight: #fde8ef;
 }
 
-/* --- 2. Reseteo Global y Tipografía --- */
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   background-color: var(--bg-main);
   color: var(--text-primary);
-  overscroll-behavior: none; /* Evita el "rebote" en móviles */
+  overscroll-behavior: none;
 }
-
-/* --- 3. Layout Principal (Full-screen Toggle) --- */
 .app-container {
   height: 100vh;
   width: 100vw;
   overflow: hidden; 
 }
-
 .view {
   width: 100%;
   height: 100%;
@@ -46,30 +38,30 @@ body {
 .header-bar {
   display: flex;
   align-items: center;
-  padding: 10px 15px; /* Más pequeño para móvil */
+  justify-content: space-between;
+  padding: 10px 15px;
   background-color: var(--bg-surface);
   border-bottom: 2px solid var(--bg-main);
   flex-shrink: 0;
-  flex-wrap: wrap; /* Permitir que los botones de Mesa/Llevar se envuelvan */
-  gap: 5px;
+  flex-wrap: wrap; 
+  gap: 10px;
 }
 .header-logo {
   height: 40px;
-  margin-right: 15px;
+  width: auto;
 }
-.header-order-id {
-  font-size: 1.1em; /* Más pequeño */
-  font-weight: bold;
-  margin-right: auto; 
+.order-type-group {
+  display: flex;
+  gap: 5px;
 }
 .btn-order-type {
   padding: 8px 12px;
-  margin-left: 5px;
   border: 1px solid var(--text-secondary);
   background-color: #f0f0f0;
   border-radius: 8px;
   cursor: pointer;
   font-weight: 500;
+  font-size: 0.9em;
 }
 .btn-order-type.active {
   background-color: var(--brand-secondary);
@@ -78,71 +70,104 @@ body {
 }
 
 .menu-content {
-  padding: 15px; /* Más pequeño */
+  padding: 15px;
   overflow-y: auto;
   flex-grow: 1;
 }
-.menu-header {
-  display: flex;
-  align-items: center;
-  margin-bottom: 20px;
-}
-.btn-back {
-  background: none;
-  border: none;
-  font-size: 2em;
-  cursor: pointer;
-  color: var(--text-secondary);
-  padding: 0 15px 0 0;
-}
-.menu-header h2 {
-  margin: 0;
-  font-size: 1.8em;
-  color: var(--text-primary);
-}
 
-.menu-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px; /* Más apretado */
+/* --- Estilos del Acordeón --- */
+.accordion-category {
+  margin-bottom: 10px;
+  border-radius: 8px;
+  background-color: var(--bg-surface);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  overflow: hidden;
 }
-
-.btn-menu-item {
+.accordion-header {
   display: flex;
   align-items: center;
   width: 100%;
-  padding: 15px; /* Más pequeño */
-  font-size: 1.1em;
+  padding: 15px;
+  font-size: 1.3em;
   font-weight: 600;
   text-align: left;
-  border: 1px solid var(--brand-primary);
-  background-color: var(--brand-secondary);
-  color: var(--text-on-brand);
-  border-radius: 8px;
-  cursor: pointer;
-  transition: transform 0.1s ease;
-}
-.btn-menu-item:active {
-  transform: scale(0.98);
-}
-.btn-menu-item.category {
+  border: none;
   background-color: var(--bg-surface);
   color: var(--text-primary);
-  border: 1px solid #ddd;
+  cursor: pointer;
+  border-bottom: 1px solid var(--color-border);
 }
-.btn-menu-item.rule {
-  background-color: var(--brand-primary); 
-  border-color: var(--brand-primary);
+.accordion-header:hover { background-color: #f9f9f9; }
+.accordion-title {
+  flex-grow: 1;
+  margin-left: 15px;
 }
-.btn-menu-item-icon {
+.accordion-icon {
   font-size: 1.5em;
-  margin-right: 15px;
+  font-weight: bold;
+  color: var(--brand-primary);
+  transition: transform 0.2s ease;
+}
+.accordion-header.open .accordion-icon {
+  transform: rotate(45deg);
+}
+.accordion-content {
+  padding: 15px;
+  border-top: 1px solid var(--bg-main);
 }
 
-/* --- 5. Pantalla de Ticket --- */
-.ticket-view {
-  background-color: var(--bg-surface);
+/* --- ¡AQUÍ ESTÁ LA CORRECCIÓN! --- */
+/* (Restauramos el Grid para los ítems) */
+.menu-grid {
+  display: grid;
+  /* Grid responsivo: se ajusta al tamaño */
+  grid-template-columns: repeat(auto-fill, minmax(105px, auto));
+  gap: 10px;
 }
+.card-base {
+  border: 1px solid var(--color-border);
+  border-radius: 30px;
+  padding: 5px;
+  cursor: pointer;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  background-color: var(--bg-surface);
+  min-height: 120px; /* Altura mínima para alinear */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.card-base:active {
+  transform: scale(0.97);
+}
+.card-group { /* Grupos (Especiales) */
+  background-color: #F0F0F0;
+  font-weight: bold;
+}
+.card-rule { /* Reglas (Arma tu...) */
+  background-color: #e6ffe6;
+  font-weight: bold;
+  border-color: var(--accent-success);
+}
+.card-item h4 {
+  margin: 0 0 5px 0;
+  font-size: 1.1em;
+  color: var(--color-primary);
+}
+.card-item p {
+  margin: 0;
+  font-size: 1.1em;
+  font-weight: bold;
+}
+.card-item small {
+  font-size: 0.8em;
+  color: var(--text-secondary);
+}
+
+/* --- Pantalla de Ticket (Sin cambios) --- */
+.ticket-view { background-color: var(--bg-surface); }
 .ticket-header {
   display: flex;
   align-items: center;
@@ -151,10 +176,28 @@ body {
   border-bottom: 2px solid var(--bg-main);
   flex-shrink: 0;
 }
-.ticket-header h2 {
-  margin: 0;
-  flex-grow: 1;
+.ticket-header h2 { margin: 0; flex-grow: 1; }
+.ticket-header .order-number {
+  margin-left: 15px;
+  font-size: 1.8em;
+  font-weight: bold;
+  color: var(--brand-primary);
 }
+.btn-back {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  color: var(--text-primary);
+  padding: 0;
+  margin-right: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+}
+.btn-back:active { background-color: #eee; }
 
 .ticket-scroll-area {
   flex-grow: 1;
@@ -169,12 +212,7 @@ body {
   font-size: 1.2em;
   color: var(--text-secondary);
 }
-
-.ticket-list {
-  padding-left: 0;
-  list-style: none;
-  margin: 0;
-}
+.ticket-list { padding-left: 0; list-style: none; margin: 0; }
 .ticket-item {
   margin-bottom: 15px;
   padding-bottom: 10px;
@@ -196,7 +234,6 @@ body {
   padding-left: 15px;
   list-style: circle;
 }
-
 .ticket-footer {
   flex-shrink: 0;
   padding: 20px;
@@ -227,7 +264,7 @@ body {
   cursor: not-allowed;
 }
 
-/* --- 6. Barra de Navegación Inferior (Móvil) --- */
+/* --- Barra de Navegación Inferior (Restaurada) --- */
 .bottom-nav {
   flex-shrink: 0;
   display: flex;
@@ -237,7 +274,7 @@ body {
 }
 .nav-button {
   flex: 1;
-  padding: 18px; /* Más alto para tocar fácil */
+  padding: 18px;
   font-size: 1.1em;
   font-weight: bold;
   background: none;
@@ -259,11 +296,8 @@ body {
   margin-left: 8px;
 }
 
-/* --- 7. Estilos de Modales (Sin Checkbox) --- */
-.modal-header h2 {
-  margin-top: 0;
-  color: var(--brand-primary);
-}
+/* --- Estilos de Modales (Sin cambios) --- */
+.modal-header h2 { margin-top: 0; color: var(--brand-primary); }
 .modal-price {
   font-weight: bold;
   font-size: 1.2em;
@@ -285,12 +319,12 @@ body {
   color: var(--text-primary);
 }
 .modal-options-grid {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 10px;
 }
 .btn-modal-option {
-  padding: 10px 15px;
+  padding: 12px 15px;
   border: 2px solid var(--color-border);
   cursor: pointer;
   background-color: var(--bg-surface);
@@ -298,6 +332,7 @@ body {
   font-size: 1em;
   font-weight: 500;
   transition: all 0.1s ease;
+  width: 100%;
 }
 .btn-modal-option.selected {
   border-color: var(--brand-primary);
@@ -322,10 +357,6 @@ body {
   align-items: center;
   margin-top: 20px;
 }
-.modal-footer .total-display {
-  font-size: 1.2em;
-  font-weight: bold;
-}
 .btn-secondary {
   padding: 12px 20px;
   cursor: pointer;
@@ -347,20 +378,4 @@ body {
 .btn-primary:disabled {
   background-color: var(--accent-disabled);
   cursor: not-allowed;
-}
-
-/* Barra de progreso del Wizard */
-.wizard-steps {
-  display: flex;
-  gap: 5px;
-  margin-bottom: 15px;
-}
-.step-indicator {
-  flex: 1;
-  height: 8px;
-  background-color: var(--color-border);
-  border-radius: 4px;
-}
-.step-indicator.active {
-  background-color: var(--brand-primary);
 }

@@ -1,13 +1,11 @@
 // src/types/menu.ts
-
-// --- TIPOS DE ITEMS VENDIBLES (Colección: menu_items) ---
 export interface FixedPriceItem {
   id: string; 
   name: string;
   category: string;
   price: number;
   description?: string;
-  modifierGroups?: string[]; // (ej. Bublee Tee)
+  modifierGroups?: string[]; 
 }
 
 export interface VariantPriceItem {
@@ -18,21 +16,18 @@ export interface VariantPriceItem {
     name: string;
     price: number;
   }[];
-  modifierGroups?: string[]; // (ej. Capuccino)
+  modifierGroups?: string[]; 
 }
 
 export type MenuItem = FixedPriceItem | VariantPriceItem;
 
-
-// --- TIPO DE MODIFICADOR (Colección: modifiers) ---
 export interface Modifier {
   id: string;
   name: string;
   price: number;
-  group: string; // ej: "leche_opciones", "sabor_te"
+  group: string; 
 }
 
-// --- TIPO DE REGLA DE PRECIO (Colección: price_rules) ---
 export interface PriceRule {
   id: string;
   name: string;
@@ -42,12 +37,11 @@ export interface PriceRule {
   }[];
 }
 
-// --- TIPO DE GRUPO DE MENÚ (Colección: menu_groups) ---
 export interface MenuGroup {
   id: string;
   name: string;
   level: number;
-  price?: number; // (Para Frappés, Malteadas)
+  price?: number; 
   parent?: string; 
   children?: string[]; 
   items_ref?: string[]; 
@@ -57,8 +51,6 @@ export interface MenuGroup {
   topping_groups?: string[]; 
 }
 
-
-// --- TIPO DE ITEM EN EL TICKET (Colección: orders) ---
 export interface TicketItem {
   id: string; 
   baseName: string; 

@@ -311,8 +311,7 @@ export function CustomizeCrepeModal({ isOpen, onClose, group, allModifiers, allP
                               cursor: shouldBeDisabled ? 'not-allowed' : 'pointer'
                           }}
                       >
-                          {mod.name} 
-                          {mod.price > 0 && <span className="price-tag">(+${mod.price.toFixed(2)})</span>}
+                          {mod.name}
                       </button>
                   );
               })}

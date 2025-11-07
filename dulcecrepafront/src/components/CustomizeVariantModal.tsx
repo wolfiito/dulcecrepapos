@@ -87,8 +87,6 @@ export function CustomizeVariantModal({ isOpen, onClose, item, allModifiers, onA
     const steps = useMemo(() => {
         const stepList: any[] = []; // Usamos 'any' temporalmente para el tipo de 'options'
         
-        // --- CORRECCIÓN DE TIPO (Error 1 y 2) ---
-        // El paso de Tamaño/Variante ahora tiene 'isExclusive' para que coincida con el tipo de Modificador
         if (isVariantPrice(item)) {
             stepList.push({ 
                 name: 'Tamaño', 
@@ -189,7 +187,7 @@ export function CustomizeVariantModal({ isOpen, onClose, item, allModifiers, onA
                                 onClick={() => setSelectedVariant(variant)}
                                 className={`btn-modal-option ${selectedVariant.name === variant.name ? 'selected' : ''}`}
                             >
-                                {variant.name} (${variant.price.toFixed(2)})
+                                {variant.name}
                             </button>
                         ))}
                         
@@ -200,7 +198,6 @@ export function CustomizeVariantModal({ isOpen, onClose, item, allModifiers, onA
                                 className={`btn-modal-option ${selectedModifiers.has(mod.id) ? 'selected' : ''}`}
                             >
                                 {mod.name} 
-                                {mod.price > 0 && <span className="price-tag">(+${mod.price.toFixed(2)})</span>}
                             </button>
                         ))}
                     </div>

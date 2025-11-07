@@ -27,17 +27,17 @@
   {"id": "pay_limon", "name": "Pay de Limón", "category": "Postres Fijos", "price": 30.00, "modifierGroups": []},
   {"id": "gelatina_rompope", "name": "Gelatina de Rompope", "category": "Postres Fijos", "price": 30.00, "modifierGroups": []},
   
-  {"id": "americano", "name": "Americano", "category": "Bebidas Calientes", "variants": [{"name": "Chico (CH)", "price": 25.00}, {"name": "Mediano (M)", "price": 30.00}], "modifierGroups": ["bebida_topping_general"]},
-  {"id": "capuccino", "name": "Capuccino", "category": "Bebidas Calientes", "variants": [{"name": "Chico (CH)", "price": 40.00}, {"name": "Mediano (M)", "price": 50.00}], "modifierGroups": ["leche_opciones", "bebida_topping_general"]},
-  {"id": "tisanas", "name": "Tisanas", "category": "Bebidas Calientes", "variants": [{"name": "Chico (CH)", "price": 25.00}, {"name": "Mediano (M)", "price": 30.00}], "modifierGroups": ["sabor_tisana", "bebida_topping_general"]},
-  {"id": "te", "name": "Té", "category": "Bebidas Calientes", "variants": [{"name": "Chico (CH)", "price": 35.00}, {"name": "Mediano (M)", "price": 45.00}], "modifierGroups": ["sabor_te", "bebida_topping_general"]},
-  {"id": "chocolate", "name": "Chocolate", "category": "Bebidas Calientes", "variants": [{"name": "Chico (CH)", "price": 35.00}, {"name": "Mediano (M)", "price": 40.00}], "modifierGroups": ["leche_opciones", "bebida_topping_general"]},
-  {"id": "chocolate_blanco", "name": "Chocolate Blanco", "category": "Bebidas Calientes", "variants": [{"name": "Chico (CH)", "price": 35.00}, {"name": "Mediano (M)", "price": 40.00}], "modifierGroups": ["leche_opciones", "bebida_topping_general"]},
-  {"id": "vainilla_latte", "name": "Vainilla Latte", "category": "Bebidas Calientes", "variants": [{"name": "Chico (CH)", "price": 35.00}, {"name": "Mediano (M)", "price": 40.00}], "modifierGroups": ["leche_opciones", "bebida_topping_general"]},
-  {"id": "taro_latte", "name": "Taro Latte", "category": "Bebidas Calientes", "variants": [{"name": "Chico (CH)", "price": 35.00}, {"name": "Mediano (M)", "price": 40.00}], "modifierGroups": ["leche_opciones", "bebida_topping_general"]},
-  {"id": "matcha_latte", "name": "Matcha Latte", "category": "Bebidas Calientes", "variants": [{"name": "Chico (CH)", "price": 35.00}, {"name": "Mediano (M)", "price": 40.00}], "modifierGroups": ["leche_opciones", "bebida_topping_general"]},
-  {"id": "moka", "name": "Moka", "category": "Bebidas Calientes", "variants": [{"name": "Chico (CH)", "price": 35.00}, {"name": "Mediano (M)", "price": 40.00}], "modifierGroups": ["leche_opciones", "bebida_topping_general"]},
-  {"id": "latte", "name": "Latte", "category": "Bebidas Calientes", "variants": [{"name": "Chico (CH)", "price": 35.00}, {"name": "Mediano (M)", "price": 40.00}], "modifierGroups": ["leche_opciones", "bebida_topping_general"]},
+  {"id": "americano", "name": "Americano", "category": "Bebidas Calientes", "variants": [{"name": "Chico", "price": 25.00}, {"name": "Mediano", "price": 30.00}], "modifierGroups": ["bebida_topping_general"]},
+  {"id": "capuccino", "name": "Capuccino", "category": "Bebidas Calientes", "variants": [{"name": "Chico", "price": 40.00}, {"name": "Mediano", "price": 50.00}], "modifierGroups": ["leche_opciones", "bebida_topping_general"]},
+  {"id": "tisanas", "name": "Tisanas", "category": "Bebidas Calientes", "variants": [{"name": "Chico", "price": 25.00}, {"name": "Mediano", "price": 30.00}], "modifierGroups": ["sabor_tisana", "bebida_topping_general"]},
+  {"id": "te", "name": "Té", "category": "Bebidas Calientes", "variants": [{"name": "Chico", "price": 35.00}, {"name": "Mediano", "price": 45.00}], "modifierGroups": ["sabor_te", "bebida_topping_general"]},
+  {"id": "chocolate", "name": "Chocolate", "category": "Bebidas Calientes", "variants": [{"name": "Chico", "price": 35.00}, {"name": "Mediano", "price": 40.00}], "modifierGroups": ["leche_opciones", "bebida_topping_general"]},
+  {"id": "chocolate_blanco", "name": "Chocolate Blanco", "category": "Bebidas Calientes", "variants": [{"name": "Chico", "price": 35.00}, {"name": "Mediano", "price": 40.00}], "modifierGroups": ["leche_opciones", "bebida_topping_general"]},
+  {"id": "vainilla_latte", "name": "Vainilla Latte", "category": "Bebidas Calientes", "variants": [{"name": "Chico", "price": 35.00}, {"name": "Mediano", "price": 40.00}], "modifierGroups": ["leche_opciones", "bebida_topping_general"]},
+  {"id": "taro_latte", "name": "Taro Latte", "category": "Bebidas Calientes", "variants": [{"name": "Chico", "price": 35.00}, {"name": "Mediano", "price": 40.00}], "modifierGroups": ["leche_opciones", "bebida_topping_general"]},
+  {"id": "matcha_latte", "name": "Matcha Latte", "category": "Bebidas Calientes", "variants": [{"name": "Chico", "price": 35.00}, {"name": "Mediano", "price": 40.00}], "modifierGroups": ["leche_opciones", "bebida_topping_general"]},
+  {"id": "moka", "name": "Moka", "category": "Bebidas Calientes", "variants": [{"name": "Chico", "price": 35.00}, {"name": "Mediano", "price": 40.00}], "modifierGroups": ["leche_opciones", "bebida_topping_general"]},
+  {"id": "latte", "name": "Latte", "category": "Bebidas Calientes", "variants": [{"name": "Chico", "price": 35.00}, {"name": "Mediano", "price": 40.00}], "modifierGroups": ["leche_opciones", "bebida_topping_general"]},
   
   {"id": "bublee_tee_sencillo", "name": "Bublee Tee Sencillo", "category": "Bebidas Frias", "price": 95.00, "modifierGroups": ["bublee_topping", "bebida_topping_general"]}
 ]

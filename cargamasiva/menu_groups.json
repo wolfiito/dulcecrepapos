@@ -22,7 +22,7 @@
     "name": "Bebidas Frías", 
     "level": 2, 
     "parent": "bebidas", 
-    "children": ["frappe_sencillo_custom", "frappe_especial_custom", "malteadas_custom", "licuados_sencillo_custom", "licuados_combinado_custom", "sodas_italianas_custom", "chamoyadas_custom", "icee_custom"],
+    "children": ["frappe_sencillo_custom", "frappe_especial_custom", "malteadas_custom", "licuados_sencillo_custom", "licuados_combinado_custom", "sodas_italianas_custom", "chamoyadas_custom"],
     "items_ref": ["bublee_tee_sencillo"] 
   },
   
@@ -33,8 +33,7 @@
   { "id": "licuados_combinado_custom", "name": "Licuado Combinado ($35.00)", "parent": "bebidas_frias", "level": 3, "rules_ref": "regla_licuado_2_ing", "base_group": "licuado_ingredientes", "extra_groups": ["leche_opciones"], "topping_groups": [] }, 
   { "id": "chamoyadas_custom", "name": "Chamoyadas ($65.00)", "parent": "bebidas_frias", "level": 3, "rules_ref": "regla_precio_fijo", "base_group": "chamoyada_sabores", "topping_groups": [], "price": 65.00 },
   { "id": "sodas_italianas_custom", "name": "Sodas Italianas ($60.00)", "parent": "bebidas_frias", "level": 3, "rules_ref": "regla_precio_fijo", "base_group": "soda_sabores", "topping_groups": [] , "price": 60.00},
-  { "id": "icee_custom", "name": "Icee ($65.00)", "parent": "bebidas_frias", "level": 3, "rules_ref": "regla_precio_fijo", "base_group": "icee_sabores", "topping_groups": [] , "price": 65.00},
-
+  
   { "id": "postres", "name": "Postres", "level": 1, "parent": "root", "children": ["hot_cake_personalizado", "waffle_personalizado", "postres_fijos"] },
   { "id": "hot_cake_personalizado", "name": "Hot Cake (Personalizado)", "parent": "postres", "level": 2, "rules_ref": "regla_postre_por_ingrediente", "base_group": "crepa_dulce_base", "extra_groups": ["crepa_dulce_extra"], "topping_groups": ["crepa_topping_salsa", "crepa_topping_seco"] },
   { "id": "waffle_personalizado", "name": "Waffle (Personalizado)", "parent": "postres", "level": 2, "rules_ref": "regla_postre_por_ingrediente", "base_group": "crepa_dulce_base", "extra_groups": ["crepa_dulce_extra"], "topping_groups": ["crepa_topping_salsa", "crepa_topping_seco"] },

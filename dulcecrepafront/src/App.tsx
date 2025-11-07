@@ -45,7 +45,7 @@ function App() {
   const [view, setView] = useState<View>('menu');
   const [ticketItems, setTicketItems] = useState<TicketItem[]>([]);
   const [currentOrderMode, setCurrentOrderMode] = useState<OrderMode>('Para Llevar');
-  const [currentOrderNumber, setCurrentOrderNumber] = useState(101); // (Placeholder)
+  const [currentOrderNumber, setCurrentOrderNumber] = useState(101); 
 
   // --- ESTADOS DE MODALES ---
   const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
@@ -53,6 +53,9 @@ function App() {
   const [isVariantModalOpen, setIsVariantModalOpen] = useState(false);
   const [itemToSelectVariant, setItemToSelectVariant] = useState<MenuItem | null>(null);
 
+  // --- ESTADO DE NAVEGACIÓN (LEVANTADO) ---
+  const [currentGroup, setCurrentGroup] = useState<MenuGroup | null>(null); 
+  
   useEffect(() => {
     const fetchMenuData = async () => {
       try {
@@ -63,12 +66,16 @@ function App() {
           getDocs(collection(db, "price_rules")),
         ]);
 
-        setAllData({
-          groups: groupsQuery.docs.map((doc: QueryDocumentSnapshot<DocumentData>) => ({ id: doc.id, ...doc.data() })) as MenuGroup[],
-          items: itemsQuery.docs.map((doc: QueryDocumentSnapshot<DocumentData>) => ({ id: doc.id, ...doc.data() })) as MenuItem[],
-          modifiers: modifiersQuery.docs.map((doc: QueryDocumentSnapshot<DocumentData>) => ({ id: doc.id, ...doc.data() })) as Modifier[],
-          rules: rulesQuery.docs.map((doc: QueryDocumentSnapshot<DocumentData>) => ({ id: doc.id, ...doc.data() })) as PriceRule[],
-        });
+        const groups = groupsQuery.docs.map((doc: QueryDocumentSnapshot<DocumentData>) => ({ id: doc.id, ...doc.data() })) as MenuGroup[];
+        const items = itemsQuery.docs.map((doc: QueryDocumentSnapshot<DocumentData>) => ({ id: doc.id, ...doc.data() })) as MenuItem[];
+        const modifiers = modifiersQuery.docs.map((doc: QueryDocumentSnapshot<DocumentData>) => ({ id: doc.id, ...doc.data() })) as Modifier[];
+        const rules = rulesQuery.docs.map((doc: QueryDocumentSnapshot<DocumentData>) => ({ id: doc.id, ...doc.data() })) as PriceRule[];
+        
+        setAllData({ groups, items, modifiers, rules });
+
+        // Establecer el grupo 'root' al cargar
+        const defaultGroup = groups.find(g => g.id === 'root') || null; 
+        setCurrentGroup(defaultGroup);
         
       } catch (error) {
         console.error("Error al cargar datos iniciales de Firebase:", error);
@@ -76,17 +83,74 @@ function App() {
     };
     fetchMenuData();
   }, []);
+
+  // --- LÓGICA DE NAVEGACIÓN (AHORA VIVE EN APP) ---
+  const handleNavigate = (groupId: string) => {
+    const nextGroup = allData.groups.find(g => g.id === groupId);
+    if (nextGroup) setCurrentGroup(nextGroup);
+  };
+  
+  const handleGoBack = () => {
+      if (currentGroup?.parent) handleNavigate(currentGroup.parent);
+      else setCurrentGroup(allData.groups.find(g => g.id === 'root') || null);
+  };
+
+  const handleProductClick = (item: MenuItem | MenuGroup) => {
+      if ('level' in item) {
+          const group = item as MenuGroup;
+          if (group.rules_ref) {
+              setGroupToCustomize(group);
+              setIsCustomModalOpen(true); 
+              return;
+          }
+          handleNavigate(group.id);
+          return;
+      }
+      const menuItem = item as MenuItem;
+      if (isVariantPrice(menuItem) || (isFixedPrice(menuItem) && menuItem.modifierGroups && menuItem.modifierGroups.length > 0)) {
+          setItemToSelectVariant(menuItem);
+          setIsVariantModalOpen(true); 
+          return;
+      }
+      if (isFixedPrice(menuItem)) {
+          const newTicketItem: TicketItem = {
+              id: Date.now().toString(), 
+              baseName: menuItem.name,
+              finalPrice: menuItem.price,
+              type: 'FIXED',
+              details: { itemId: menuItem.id, selectedModifiers: [] }
+          };
+          setTicketItems(prevItems => [...prevItems, newTicketItem]);
+          // --- CORRECCIÓN AQUÍ TAMBIÉN ---
+          handleNavigate('root'); // Volver al inicio después de añadir un item fijo
+          return;
+      }
+  };
+
+  // --- LÓGICA DE MODALES (CORREGIDA) ---
+  const handleCloseCustomModal = () => {
+    setIsCustomModalOpen(false);
+    setGroupToCustomize(null);
+  };
+
+  const handleCloseVariantModal = () => {
+    setIsVariantModalOpen(false);
+    setItemToSelectVariant(null);
+  };
   
   const handleAddItemToTicket = (item: TicketItem) => {
     setTicketItems(prevItems => [...prevItems, item]);
-    if (item.type === 'CUSTOM') setIsCustomModalOpen(false);
-    else setIsVariantModalOpen(false);
+    
+    if (item.type === 'CUSTOM') handleCloseCustomModal();
+    else handleCloseVariantModal();
+
+    // --- ¡AQUÍ ESTÁ LA CORRECCIÓN PRINCIPAL! ---
+    // Regresa a la vista de menú Y resetea la navegación al 'root'.
+    setView('menu');
+    handleNavigate('root'); 
   };
   
-  const totalTicket = useMemo(() => {
-    return ticketItems.reduce((sum, item) => sum + item.finalPrice, 0);
-  }, [ticketItems]);
-
+  // --- LÓGICA DE ORDEN (AUTO-INCREMENTO) ---
   const handleSubmitOrder = async () => {
     if (ticketItems.length === 0) return;
 
@@ -140,7 +204,7 @@ function App() {
         setCurrentOrderNumber(finalOrderNumber + 1); 
         setTicketItems([]);
         alert(`¡Orden #${displayOrderNumber} enviada a cocina!`);
-        setView('menu'); // Vuelve al menú después de enviar
+        setView('menu'); 
 
     } catch (e) {
         console.error("Error en la transacción de la orden:", e);
@@ -148,18 +212,25 @@ function App() {
     }
   };
 
+  const totalTicket = useMemo(() => {
+    return ticketItems.reduce((sum, item) => sum + item.finalPrice, 0);
+  }, [ticketItems]);
+
   return (
     <div className="app-container">
       
       {/* Vista de Menú */}
       <div className="view" style={{ display: view === 'menu' ? 'flex' : 'none' }}>
         <MenuScreen
+          // Pasa los datos
           allData={allData}
+          currentGroup={currentGroup}
           currentOrderNumber={currentOrderNumber}
           currentOrderMode={currentOrderMode}
+          // Pasa los controladores
           onSetOrderMode={setCurrentOrderMode}
-          onOpenCustomModal={(group) => { setGroupToCustomize(group); setIsCustomModalOpen(true); }}
-          onOpenVariantModal={(item) => { setItemToSelectVariant(item); setIsVariantModalOpen(true); }}
+          onProductClick={handleProductClick}
+          onGoBack={handleGoBack}
         />
         <BottomNav ticketCount={ticketItems.length} onNavigate={setView} />
       </div>
@@ -174,11 +245,11 @@ function App() {
         />
       </div>
       
-      {/* MODALES (viven en App para persistir) */}
+      {/* MODALES */}
       {groupToCustomize && (
           <CustomizeCrepeModal 
               isOpen={isCustomModalOpen}
-              onClose={() => setIsCustomModalOpen(false)}
+              onClose={handleCloseCustomModal}
               group={groupToCustomize} 
               allModifiers={allData.modifiers}
               allPriceRules={allData.rules} 
@@ -188,7 +259,7 @@ function App() {
       {itemToSelectVariant && (
           <CustomizeVariantModal 
               isOpen={isVariantModalOpen}
-              onClose={() => setIsVariantModalOpen(false)}
+              onClose={handleCloseVariantModal}
               item={itemToSelectVariant} 
               allModifiers={allData.modifiers}
               onAddItem={handleAddItemToTicket}
@@ -202,57 +273,25 @@ function App() {
 
 interface MenuScreenProps {
   allData: { groups: MenuGroup[], items: MenuItem[] };
+  currentGroup: MenuGroup | null;
   currentOrderNumber: number;
   currentOrderMode: OrderMode;
   onSetOrderMode: (mode: OrderMode) => void;
-  onOpenCustomModal: (group: MenuGroup) => void;
-  onOpenVariantModal: (item: MenuItem) => void;
+  onProductClick: (item: MenuItem | MenuGroup) => void;
+  onGoBack: () => void;
 }
 
 const MenuScreen: React.FC<MenuScreenProps> = ({ 
   allData, 
+  currentGroup,
   currentOrderNumber, 
   currentOrderMode, 
   onSetOrderMode,
-  onOpenCustomModal,
-  onOpenVariantModal
+  onProductClick,
+  onGoBack
 }) => {
   
-  const [currentGroup, setCurrentGroup] = useState<MenuGroup | null>(null);
-
-  useEffect(() => {
-    if (allData.groups.length > 0 && !currentGroup) {
-      setCurrentGroup(allData.groups.find(g => g.id === 'root') || null);
-    }
-  }, [allData.groups, currentGroup]);
-
-  const handleNavigate = (groupId: string) => {
-    setCurrentGroup(allData.groups.find(g => g.id === groupId) || null);
-  };
-  
-  const handleGoBack = () => {
-    if (currentGroup?.parent) handleNavigate(currentGroup.parent);
-    else setCurrentGroup(allData.groups.find(g => g.id === 'root') || null);
-  };
-
-  const handleProductClick = (item: MenuItem | MenuGroup) => {
-      if ('level' in item) {
-          const group = item as MenuGroup;
-          if (group.rules_ref) {
-              onOpenCustomModal(group);
-              return;
-          }
-          handleNavigate(group.id);
-          return;
-      }
-      const menuItem = item as MenuItem;
-      if (isVariantPrice(menuItem) || (isFixedPrice(menuItem) && menuItem.modifierGroups && menuItem.modifierGroups.length > 0)) {
-          onOpenVariantModal(menuItem);
-          return;
-      }
-      // (Si llegamos aquí, es un item fijo sin modificadores, lo cual ya no tenemos en el menú de bebidas)
-  };
-
+  // Los cálculos ahora viven aquí, usando los props
   const groupsToShow = useMemo(() => {
     if (currentGroup?.id === 'root') return allData.groups.filter(g => g.parent === 'root');
     return allData.groups.filter(g => g.parent === currentGroup?.id);
@@ -270,7 +309,6 @@ const MenuScreen: React.FC<MenuScreenProps> = ({
   return (
     <>
       <header className="header-bar">
-        {/* <img src="/logo.png" alt="Logo" className="header-logo" /> */}
         <span className="header-order-id">Orden #{currentOrderNumber.toString().padStart(3, '0')}</span>
         {(['Mesa 1', 'Mesa 2', 'Para Llevar'] as OrderMode[]).map(mode => (
           <button 
@@ -286,7 +324,7 @@ const MenuScreen: React.FC<MenuScreenProps> = ({
       <div className="menu-content">
         <div className="menu-header">
             {currentGroup && currentGroup.parent && (
-                <button onClick={handleGoBack} className="btn-back">&larr;</button>
+                <button onClick={onGoBack} className="btn-back">&larr;</button>
             )}
             <h2>{currentGroup ? currentGroup.name : 'Cargando Menú...'}</h2>
         </div>
@@ -296,14 +334,14 @@ const MenuScreen: React.FC<MenuScreenProps> = ({
                 <MenuButton 
                   key={group.id} 
                   item={group} 
-                  onClick={() => handleProductClick(group)} 
+                  onClick={() => onProductClick(group)} 
                 />
             ))}
             {itemsToShow.map(item => (
               <MenuButton 
                 key={item.id} 
                 item={item} 
-                onClick={() => handleProductClick(item)} 
+                onClick={() => onProductClick(item)} 
               />
             ))}
         </div>

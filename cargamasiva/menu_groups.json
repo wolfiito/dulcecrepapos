@@ -1,8 +1,15 @@
 [
-  { "id": "root", "name": "Menú Dulce Crepa", "level": 0, "children": ["bebidas"] },
+  { "id": "root", "name": "Categorías Principales", "level": 0, "children": ["crepas_dulces", "crepas_saladas", "bebidas", "postres"] },
+  
+  { "id": "crepas_dulces", "name": "Crepas Dulces", "level": 1, "parent": "root", "children": ["dulces_especiales", "dulces_personalizadas"] },
+  { "id": "dulces_especiales", "name": "Especiales Dulces", "parent": "crepas_dulces", "level": 2, "items_ref": ["frutos_rojos", "dulce_cajeta", "dulce_rompope", "dulce_tentacion", "dulce_fresa", "dulce_duraznos", "delicia_casa", "dulce_platano", "dulce_tropical"] },
+  { "id": "dulces_personalizadas", "name": "Arma tu Crepa Dulce", "parent": "crepas_dulces", "level": 2, "rules_ref": "regla_dulce_por_ingrediente", "base_group": "crepa_dulce_base", "extra_groups": ["crepa_dulce_extra"], "topping_groups": ["crepa_topping_salsa", "crepa_topping_seco"] },
+  
+  { "id": "crepas_saladas", "name": "Crepas Saladas", "level": 1, "parent": "root", "children": ["saladas_especiales", "saladas_personalizadas"] },
+  { "id": "saladas_especiales", "name": "Especiales Saladas", "parent": "crepas_saladas", "level": 2, "items_ref": ["hawaiana", "italiana", "crepizza", "tres_quesos", "suprema", "clasica", "chicken_tender", "rajas_crema_esp"] },
+  { "id": "saladas_personalizadas", "name": "Arma tu Crepa Salada", "parent": "crepas_saladas", "level": 2, "rules_ref": "regla_salada_por_ingrediente", "base_group": "crepa_salada_base", "extra_groups": ["crepa_salada_extra"], "topping_groups": [] },
   
   { "id": "bebidas", "name": "Bebidas", "level": 1, "parent": "root", "children": ["bebidas_calientes", "bebidas_frias"] },
-  
   { 
     "id": "bebidas_calientes", 
     "name": "Bebidas Calientes", 
@@ -10,7 +17,6 @@
     "parent": "bebidas", 
     "items_ref": ["americano", "capuccino", "tisanas", "te", "chocolate", "chocolate_blanco", "vainilla_latte", "taro_latte", "matcha_latte", "moka", "latte"] 
   },
-  
   { 
     "id": "bebidas_frias", 
     "name": "Bebidas Frías", 
@@ -20,16 +26,17 @@
     "items_ref": ["bublee_tee_sencillo"] 
   },
   
-  { "id": "frappe_sencillo_custom", "name": "Frappé Sencillo ($65.00)", "parent": "bebidas_frias", "level": 3, "rules_ref": "regla_precio_fijo", "base_group": "frappe_sabores", "extra_groups": ["leche_opciones"], "topping_groups": ["bebida_topping_frio"], "price": 65.00 },
-  { "id": "frappe_especial_custom", "name": "Frappé Especial ($85.00)", "parent": "bebidas_frias", "level": 3, "rules_ref": "regla_precio_fijo", "base_group": "frappe_especial_sabores", "extra_groups": ["leche_opciones"], "topping_groups": ["bebida_topping_frio"], "price": 85.00 },
-  { "id": "malteadas_custom", "name": "Malteadas ($65.00)", "parent": "bebidas_frias", "level": 3, "rules_ref": "regla_precio_fijo", "base_group": "malteada_sabores", "extra_groups": ["leche_opciones"], "topping_groups": ["bebida_topping_frio"], "price": 65.00 },
-  { "id": "licuados_sencillo_custom", "name": "Licuado Sencillo ($30.00)", "parent": "bebidas_frias", "level": 3, "rules_ref": "regla_licuado_1_ing", "base_group": "licuado_ingredientes", "extra_groups": ["leche_opciones"], "topping_groups": [] },
-
-  { "id": "licuados_combinado_custom", "name": "Licuado Combinado ($35.00)", "parent": "bebidas_frias", "level": 3, "rules_ref": "regla_licuado_2_ing", "base_group": "licuado_ingredientes", "extra_groups": ["leche_opciones"], "topping_groups": [] },
-
+  { "id": "frappe_sencillo_custom", "name": "Frappé Sencillo ($65.00)", "parent": "bebidas_frias", "level": 3, "rules_ref": "regla_precio_fijo", "base_group": "frappe_sabores", "extra_groups": ["leche_opciones"], "topping_groups": ["bebida_topping_general", "bublee_topping"], "price": 65.00 },
+  { "id": "frappe_especial_custom", "name": "Frappé Especial ($85.00)", "parent": "bebidas_frias", "level": 3, "rules_ref": "regla_precio_fijo", "base_group": "frappe_especial_sabores", "extra_groups": ["leche_opciones"], "topping_groups": ["bebida_topping_general", "bublee_topping"], "price": 85.00 },
+  { "id": "malteadas_custom", "name": "Malteadas ($65.00)", "parent": "bebidas_frias", "level": 3, "rules_ref": "regla_precio_fijo", "base_group": "malteada_sabores", "extra_groups": ["leche_opciones"], "topping_groups": ["bebida_topping_general", "bublee_topping"], "price": 65.00 },
+  { "id": "licuados_sencillo_custom", "name": "Licuado Sencillo ($30.00)", "parent": "bebidas_frias", "level": 3, "rules_ref": "regla_licuado_1_ing", "base_group": "licuado_ingredientes", "extra_groups": ["leche_opciones"], "topping_groups": [] }, 
+  { "id": "licuados_combinado_custom", "name": "Licuado Combinado ($35.00)", "parent": "bebidas_frias", "level": 3, "rules_ref": "regla_licuado_2_ing", "base_group": "licuado_ingredientes", "extra_groups": ["leche_opciones"], "topping_groups": [] }, 
   { "id": "chamoyadas_custom", "name": "Chamoyadas ($65.00)", "parent": "bebidas_frias", "level": 3, "rules_ref": "regla_precio_fijo", "base_group": "chamoyada_sabores", "topping_groups": [], "price": 65.00 },
-
   { "id": "sodas_italianas_custom", "name": "Sodas Italianas ($60.00)", "parent": "bebidas_frias", "level": 3, "rules_ref": "regla_precio_fijo", "base_group": "soda_sabores", "topping_groups": [] , "price": 60.00},
-  
-  { "id": "icee_custom", "name": "Icee ($65.00)", "parent": "bebidas_frias", "level": 3, "rules_ref": "regla_precio_fijo", "base_group": "icee_sabores", "topping_groups": [] , "price": 65.00}
+  { "id": "icee_custom", "name": "Icee ($65.00)", "parent": "bebidas_frias", "level": 3, "rules_ref": "regla_precio_fijo", "base_group": "icee_sabores", "topping_groups": [] , "price": 65.00},
+
+  { "id": "postres", "name": "Postres", "level": 1, "parent": "root", "children": ["hot_cake_personalizado", "waffle_personalizado", "postres_fijos"] },
+  { "id": "hot_cake_personalizado", "name": "Hot Cake (Personalizado)", "parent": "postres", "level": 2, "rules_ref": "regla_postre_por_ingrediente", "base_group": "crepa_dulce_base", "extra_groups": ["crepa_dulce_extra"], "topping_groups": ["crepa_topping_salsa", "crepa_topping_seco"] },
+  { "id": "waffle_personalizado", "name": "Waffle (Personalizado)", "parent": "postres", "level": 2, "rules_ref": "regla_postre_por_ingrediente", "base_group": "crepa_dulce_base", "extra_groups": ["crepa_dulce_extra"], "topping_groups": ["crepa_topping_salsa", "crepa_topping_seco"] },
+  { "id": "postres_fijos", "name": "Otros Postres", "parent": "postres", "level": 2, "items_ref": ["fresa_crema", "duraznos_crema", "frutos_rojos_crema", "uvas_verdes_crema", "flan_vainilla", "flan_napolitano", "arroz_leche", "gelatina_mosaico", "pay_limon", "gelatina_rompope"] }
 ]

@@ -1,42 +1,366 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+/* src/App.css (Corregido para Mobile-First y Toggle de Vistas) */
+
+/* --- 1. Paleta de Colores (Basada en el menú) --- */
+:root {
+  --brand-primary: #D9538A; 
+  --brand-secondary: #E5739F;
+  --bg-main: #F4F4F7;
+  --bg-surface: #FFFFFF;
+  --accent-success: #4CAF50;
+  --accent-disabled: #BDBDBD;
+  --text-primary: #212121;
+  --text-secondary: #757575;
+  --text-on-brand: #FFFFFF;
+  --color-border: #E0E0E0;
+  --color-highlight: #fde8ef; /* Rosa pálido para selección */
+}
+
+/* --- 2. Reseteo Global y Tipografía --- */
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  overscroll-behavior: none; /* Evita el "rebote" en móviles */
+}
+
+/* --- 3. Layout Principal (Full-screen Toggle) --- */
+.app-container {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden; 
+}
+
+.view {
+  width: 100%;
+  height: 100%;
+  display: flex; 
+  flex-direction: column;
+  background-color: var(--bg-main);
+}
+
+/* --- 4. Pantalla de Menú --- */
+.header-bar {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px; /* Más pequeño para móvil */
+  background-color: var(--bg-surface);
+  border-bottom: 2px solid var(--bg-main);
+  flex-shrink: 0;
+  flex-wrap: wrap; /* Permitir que los botones de Mesa/Llevar se envuelvan */
+  gap: 5px;
+}
+.header-logo {
+  height: 40px;
+  margin-right: 15px;
+}
+.header-order-id {
+  font-size: 1.1em; /* Más pequeño */
+  font-weight: bold;
+  margin-right: auto; 
+}
+.btn-order-type {
+  padding: 8px 12px;
+  margin-left: 5px;
+  border: 1px solid var(--text-secondary);
+  background-color: #f0f0f0;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+}
+.btn-order-type.active {
+  background-color: var(--brand-secondary);
+  color: var(--text-on-brand);
+  border-color: var(--brand-primary);
+}
+
+.menu-content {
+  padding: 15px; /* Más pequeño */
+  overflow-y: auto;
+  flex-grow: 1;
+}
+.menu-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.btn-back {
+  background: none;
+  border: none;
+  font-size: 2em;
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 0 15px 0 0;
+}
+.menu-header h2 {
+  margin: 0;
+  font-size: 1.8em;
+  color: var(--text-primary);
+}
+
+.menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px; /* Más apretado */
+}
+
+.btn-menu-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 15px; /* Más pequeño */
+  font-size: 1.1em;
+  font-weight: 600;
+  text-align: left;
+  border: 1px solid var(--brand-primary);
+  background-color: var(--brand-secondary);
+  color: var(--text-on-brand);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+.btn-menu-item:active {
+  transform: scale(0.98);
+}
+.btn-menu-item.category {
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid #ddd;
+}
+.btn-menu-item.rule {
+  background-color: var(--brand-primary); 
+  border-color: var(--brand-primary);
+}
+.btn-menu-item-icon {
+  font-size: 1.5em;
+  margin-right: 15px;
+}
+
+/* --- 5. Pantalla de Ticket --- */
+.ticket-view {
+  background-color: var(--bg-surface);
+}
+.ticket-header {
+  display: flex;
+  align-items: center;
+  padding: 15px 20px;
+  background-color: var(--bg-surface);
+  border-bottom: 2px solid var(--bg-main);
+  flex-shrink: 0;
+}
+.ticket-header h2 {
+  margin: 0;
+  flex-grow: 1;
+}
+
+.ticket-scroll-area {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+.ticket-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-size: 1.2em;
+  color: var(--text-secondary);
+}
+
+.ticket-list {
+  padding-left: 0;
+  list-style: none;
+  margin: 0;
+}
+.ticket-item {
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed var(--text-secondary);
+}
+.ticket-item-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1.1em;
+}
+.ticket-item-header span:first-child {
+  font-weight: bold;
+  color: var(--text-primary);
+}
+.ticket-item-details {
+  font-size: 0.9em;
+  color: var(--text-secondary);
+  margin: 5px 0 0 10px;
+  padding-left: 15px;
+  list-style: circle;
+}
+
+.ticket-footer {
+  flex-shrink: 0;
+  padding: 20px;
+  border-top: 2px solid var(--text-primary);
+  background-color: var(--bg-surface);
+  box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
+}
+.ticket-total {
+  display: flex;
+  justify-content: space-between;
+  font-weight: bold;
+  font-size: 1.5em;
+  margin-bottom: 15px;
+}
+.btn-submit-order {
+  width: 100%;
+  padding: 20px;
+  font-size: 1.3em;
+  font-weight: bold;
+  background-color: var(--accent-success);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.btn-submit-order:disabled {
+  background-color: var(--accent-disabled);
+  cursor: not-allowed;
+}
+
+/* --- 6. Barra de Navegación Inferior (Móvil) --- */
+.bottom-nav {
+  flex-shrink: 0;
+  display: flex;
+  border-top: 1px solid var(--color-border);
+  background-color: var(--bg-surface);
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.05);
+}
+.nav-button {
+  flex: 1;
+  padding: 18px; /* Más alto para tocar fácil */
+  font-size: 1.1em;
+  font-weight: bold;
+  background: none;
+  border: none;
+  border-left: 1px solid var(--color-border);
+  cursor: pointer;
+  color: var(--brand-primary);
+}
+.nav-button:first-child {
+  border-left: none;
+  color: var(--text-secondary);
+}
+.nav-button .badge {
+  background-color: var(--brand-primary);
+  color: white;
+  border-radius: 50%;
+  padding: 2px 8px;
+  font-size: 0.8em;
+  margin-left: 8px;
+}
+
+/* --- 7. Estilos de Modales (Sin Checkbox) --- */
+.modal-header h2 {
+  margin-top: 0;
+  color: var(--brand-primary);
+}
+.modal-price {
+  font-weight: bold;
+  font-size: 1.2em;
+  padding: 10px;
+  border-radius: 4px;
   text-align: center;
 }
+.modal-section {
+  border: 1px solid var(--bg-main);
+  background-color: #fafafa;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+}
+.modal-section h4 {
+  margin-top: 0;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 5px;
+  color: var(--text-primary);
+}
+.modal-options-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.btn-modal-option {
+  padding: 10px 15px;
+  border: 2px solid var(--color-border);
+  cursor: pointer;
+  background-color: var(--bg-surface);
+  border-radius: 8px;
+  font-size: 1em;
+  font-weight: 500;
+  transition: all 0.1s ease;
+}
+.btn-modal-option.selected {
+  border-color: var(--brand-primary);
+  background-color: var(--color-highlight);
+  color: var(--brand-primary);
+  font-weight: bold;
+  box-shadow: 0 2px 5px rgba(217, 83, 138, 0.2);
+}
+.btn-modal-option:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: var(--bg-main);
+}
+.btn-modal-option .price-tag {
+  color: var(--accent-primary);
+  margin-left: 5px;
+  font-weight: bold;
+}
+.modal-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+}
+.modal-footer .total-display {
+  font-size: 1.2em;
+  font-weight: bold;
+}
+.btn-secondary {
+  padding: 12px 20px;
+  cursor: pointer;
+  background-color: #888;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+}
+.btn-primary {
+  padding: 12px 20px;
+  cursor: pointer;
+  background-color: var(--accent-success);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+}
+.btn-primary:disabled {
+  background-color: var(--accent-disabled);
+  cursor: not-allowed;
+}
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
+/* Barra de progreso del Wizard */
+.wizard-steps {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 15px;
 }
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+.step-indicator {
+  flex: 1;
+  height: 8px;
+  background-color: var(--color-border);
+  border-radius: 4px;
 }
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
+.step-indicator.active {
+  background-color: var(--brand-primary);
 }

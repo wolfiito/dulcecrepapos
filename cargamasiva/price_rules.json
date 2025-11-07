@@ -1,17 +1,36 @@
 [
-  { 
-    "id": "regla_precio_fijo", 
-    "name": "Precio Fijo de Bebida", 
-    "basePrices": [{ "count": 1, "price": 0.00 }] 
+  {
+    "id": "regla_dulce_por_ingrediente",
+    "name": "Precios de Crepa Dulce Personalizada",
+    "basePrices": [
+      { "count": 1, "price": 55.00 },
+      { "count": 2, "price": 65.00 },
+      { "count": 3, "price": 70.00 },
+      { "count": 4, "price": 80.00 },
+      { "count": 5, "price": 90.00 }
+    ]
   },
-  { 
-    "id": "regla_licuado_1_ing", 
-    "name": "Licuado 1 Ingrediente", 
-    "basePrices": [{ "count": 1, "price": 30.00 }]
+  {
+    "id": "regla_salada_por_ingrediente",
+    "name": "Precios de Crepa Salada Personalizada",
+    "basePrices": [
+      { "count": 1, "price": 55.00 },
+      { "count": 2, "price": 65.00 },
+      { "count": 3, "price": 75.00 },
+      { "count": 4, "price": 85.00 },
+      { "count": 5, "price": 95.00 }
+    ]
   },
-  { 
-    "id": "regla_licuado_2_ing", 
-    "name": "Licuado Combinado", 
-    "basePrices": [{ "count": 2, "price": 35.00 }]
-  }
+  {
+    "id": "regla_postre_por_ingrediente",
+    "name": "Precios de Postre Personalizado",
+    "basePrices": [
+      { "count": 1, "price": 35.00 },
+      { "count": 2, "price": 40.00 },
+      { "count": 3, "price": 45.00 }
+    ]
+  },
+  { "id": "regla_precio_fijo", "name": "Precio Fijo de Bebida", "basePrices": [{ "count": 1, "price": 0.00 }] },
+  { "id": "regla_licuado_1_ing", "name": "Licuado 1 Ingrediente", "basePrices": [{ "count": 1, "price": 30.00 }] },
+  { "id": "regla_licuado_2_ing", "name": "Licuado Combinado", "basePrices": [{ "count": 2, "price": 35.00 }] }
 ]

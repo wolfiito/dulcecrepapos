@@ -20,7 +20,6 @@ async function loadData(collectionName, dataArray) {
   let count = 0;
   
   for (const item of dataArray) {
-    // Usamos el ID del JSON como el ID del documento
     const docRef = db.collection(collectionName).doc(item.id); 
     
     if (count >= 499) {
@@ -31,7 +30,7 @@ async function loadData(collectionName, dataArray) {
     }
 
     const { id, ...data } = item; 
-    batch.set(docRef, data); // Guardamos los datos sin el campo 'id' duplicado
+    batch.set(docRef, data); 
     count++;
   }
 
@@ -46,11 +45,8 @@ async function main() {
   try {
     console.log("Iniciando carga de datos... Asegúrate de borrar las colecciones antiguas en Firebase si es necesario.");
     
-    // 1. CARGA DE ESTRUCTURA Y REGLAS
     await loadData('price_rules', rulesData); 
     await loadData('menu_groups', groupsData);
-    
-    // 2. CARGA DE DATOS TRANSACCIONALES
     await loadData('menu_items', itemsData);
     await loadData('modifiers', modifiersData);
     

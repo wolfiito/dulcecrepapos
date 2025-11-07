@@ -1,14 +1,27 @@
-// src/App.tsx
+// src/App.tsx (Reemplazo Completo)
 
 import { useEffect, useState, useMemo } from 'react';
-import { collection, getDocs, serverTimestamp, addDoc } from 'firebase/firestore';
-import { db } from './firebase';
+import { 
+    db, 
+    collection, 
+    getDocs, 
+    doc, 
+    runTransaction, 
+    serverTimestamp,
+    type Transaction, 
+    type QueryDocumentSnapshot,
+    type DocumentData
+} from './firebase'; 
+
 import type { 
     MenuItem, FixedPriceItem, VariantPriceItem, Modifier, TicketItem, MenuGroup, PriceRule 
 } from './types/menu'; 
-import { ProductCard } from './components/ProductCard';
 import { CustomizeCrepeModal } from './components/CustomizeCrepeModal'; 
-import { CustomizeVariantModal } from './components/CustomizeVariantModal'; // <-- Nuevo Modal
+import { CustomizeVariantModal } from './components/CustomizeVariantModal'; 
+
+// --- Tipos de Vista ---
+type View = 'menu' | 'ticket';
+type OrderMode = 'Mesa 1' | 'Mesa 2' | 'Para Llevar';
 
 // --- Type Guards ---
 function isFixedPrice(item: MenuItem): item is FixedPriceItem {
@@ -20,27 +33,26 @@ function isVariantPrice(item: MenuItem): item is VariantPriceItem {
 
 // --- Componente Principal ---
 function App() {
-  // --- ESTADOS GLOBALES DE DATOS ---
-  const [menuGroups, setMenuGroups] = useState<MenuGroup[]>([]);
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
-  const [allModifiers, setAllModifiers] = useState<Modifier[]>([]);
-  const [allPriceRules, setAllPriceRules] = useState<PriceRule[]>([]);
+  // --- ESTADO GLOBAL DE DATOS ---
+  const [allData, setAllData] = useState({
+    groups: [] as MenuGroup[],
+    items: [] as MenuItem[],
+    modifiers: [] as Modifier[],
+    rules: [] as PriceRule[],
+  });
   
-  // --- ESTADOS DE TICKET ---
+  // --- ESTADO DE NAVEGACIÓN Y ORDEN ---
+  const [view, setView] = useState<View>('menu');
   const [ticketItems, setTicketItems] = useState<TicketItem[]>([]);
+  const [currentOrderMode, setCurrentOrderMode] = useState<OrderMode>('Para Llevar');
+  const [currentOrderNumber, setCurrentOrderNumber] = useState(101); // (Placeholder)
 
-  // --- ESTADOS DEL MODAL DE CREPAS/POSTRES (PRICED_BY_INGREDIENT) ---
+  // --- ESTADOS DE MODALES ---
   const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
   const [groupToCustomize, setGroupToCustomize] = useState<MenuGroup | null>(null);
-
-  // --- ESTADOS DEL MODAL DE BEBIDAS (FIXED_PRICE_WITH_VARIANTS) ---
   const [isVariantModalOpen, setIsVariantModalOpen] = useState(false);
-  const [itemToSelectVariant, setItemToSelectVariant] = useState<VariantPriceItem | null>(null);
+  const [itemToSelectVariant, setItemToSelectVariant] = useState<MenuItem | null>(null);
 
-  // --- ESTADO DE NAVEGACIÓN ---
-  const [currentGroup, setCurrentGroup] = useState<MenuGroup | null>(null); 
-  
-  // --- LÓGICA DE CARGA DE DATOS (Al inicio de la App) ---
   useEffect(() => {
     const fetchMenuData = async () => {
       try {
@@ -51,288 +63,134 @@ function App() {
           getDocs(collection(db, "price_rules")),
         ]);
 
-        const groups = groupsQuery.docs.map(doc => ({ id: doc.id, ...doc.data() })) as MenuGroup[];
-        setMenuGroups(groups);
-        setMenuItems(itemsQuery.docs.map(doc => ({ id: doc.id, ...doc.data() })) as MenuItem[]);
-        setAllModifiers(modifiersQuery.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Modifier[]);
-        setAllPriceRules(rulesQuery.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PriceRule[]);
-
-        const defaultGroup = groups.find(g => g.id === 'root') || null; 
-        setCurrentGroup(defaultGroup);
+        setAllData({
+          groups: groupsQuery.docs.map((doc: QueryDocumentSnapshot<DocumentData>) => ({ id: doc.id, ...doc.data() })) as MenuGroup[],
+          items: itemsQuery.docs.map((doc: QueryDocumentSnapshot<DocumentData>) => ({ id: doc.id, ...doc.data() })) as MenuItem[],
+          modifiers: modifiersQuery.docs.map((doc: QueryDocumentSnapshot<DocumentData>) => ({ id: doc.id, ...doc.data() })) as Modifier[],
+          rules: rulesQuery.docs.map((doc: QueryDocumentSnapshot<DocumentData>) => ({ id: doc.id, ...doc.data() })) as PriceRule[],
+        });
         
       } catch (error) {
         console.error("Error al cargar datos iniciales de Firebase:", error);
       }
     };
-
     fetchMenuData();
   }, []);
+  
+  const handleAddItemToTicket = (item: TicketItem) => {
+    setTicketItems(prevItems => [...prevItems, item]);
+    if (item.type === 'CUSTOM') setIsCustomModalOpen(false);
+    else setIsVariantModalOpen(false);
+  };
+  
+  const totalTicket = useMemo(() => {
+    return ticketItems.reduce((sum, item) => sum + item.finalPrice, 0);
+  }, [ticketItems]);
 
   const handleSubmitOrder = async () => {
     if (ticketItems.length === 0) return;
 
-    // Mapear los items del ticket al formato de orden requerido por el KDS
     const orderItems = ticketItems.map(item => ({
         ticketItemId: item.id,
         baseName: item.baseName,
-        status: 'PENDING', // El KDS inicia todos los items como PENDING
+        status: 'PENDING', 
         price: item.finalPrice,
         type: item.type,
-        notes: "", // Se puede añadir un campo para notas de la orden
-        // Simplificamos los detalles para la cocina
+        notes: "", 
         details: {
             variantName: item.details?.variantName || '',
             baseRule: item.details?.basePriceRule || '',
-            // Solo incluimos el nombre de los modificadores para que la cocina lo lea fácilmente
             modifiers: item.details?.selectedModifiers.map(mod => ({
-                name: mod.name + (mod.price > 0 ? ` (+$${mod.price.toFixed(2)})` : ''),
-                group: mod.group 
+                name: mod.name.replace(/\(\+\$\d+\.\d+\)/, '').trim() + (mod.price > 0 ? ` (+${mod.price.toFixed(2)})` : ''),
+                group: mod.group,
+                price: mod.price
             })) || []
         }
     }));
-
-    // Construir el documento de orden final
-    const newOrder = {
-    // Buscaremos el orderNumber más alto en Firebase para auto-incrementar
-    // Por ahora, usamos un número fijo o un timestamp simplificado.
-      orderNumber: Math.floor(Date.now() / 100000) % 1000, // Número simple de 3 dígitos
-      createdAt: serverTimestamp(), // Hora del servidor de Firebase
-      status: 'PENDING',
-      totalAmount: totalTicket,
-      paymentStatus: 'PAID', // Asumimos que se paga antes de enviar a cocina
-      items: orderItems,
-    };
+    
+    let finalOrderNumber = 0;
+    const counterId = "orderNumberCounter"; 
 
     try {
-      const docRef = await addDoc(collection(db, "orders"), newOrder);
-      console.log("Orden enviada a Firestore con ID:", docRef.id);
+        await runTransaction(db, async (transaction: Transaction) => {
+            const counterRef = doc(db, "counters", counterId);
+            const counterDoc = await transaction.get(counterRef);
 
-      // 4. Resetear el POS
-      setTicketItems([]);
-      alert(`¡Orden #${newOrder.orderNumber} enviada a cocina!`);
+            const currentNumber = counterDoc.exists() ? counterDoc.data().currentNumber : 0;
+            const newNumber = currentNumber + 1;
+            finalOrderNumber = newNumber;
+            
+            transaction.set(counterRef, { currentNumber: newNumber }, { merge: true });
+            
+            const newOrder = {
+                orderNumber: finalOrderNumber, 
+                orderMode: currentOrderMode,
+                createdAt: serverTimestamp(),
+                status: 'PENDING',
+                totalAmount: totalTicket,
+                paymentStatus: 'PAID', 
+                items: orderItems,
+            };
+            
+            const newOrderRef = doc(collection(db, "orders"));
+            transaction.set(newOrderRef, newOrder);
+        });
+
+        const displayOrderNumber = finalOrderNumber.toString().padStart(3, '0');
+        setCurrentOrderNumber(finalOrderNumber + 1); 
+        setTicketItems([]);
+        alert(`¡Orden #${displayOrderNumber} enviada a cocina!`);
+        setView('menu'); // Vuelve al menú después de enviar
 
     } catch (e) {
-      console.error("Error al añadir la orden:", e);
-    }
-  };  
-  // --- LÓGICA DE NAVEGACIÓN ---
-  const handleNavigate = (groupId: string) => {
-    const nextGroup = menuGroups.find(g => g.id === groupId);
-    if (nextGroup) {
-        setCurrentGroup(nextGroup);
+        console.error("Error en la transacción de la orden:", e);
+        alert("Error al enviar la orden. Por favor, inténtalo de nuevo.");
     }
   };
-  
-  const handleGoBack = () => {
-      if (currentGroup?.parent) {
-          handleNavigate(currentGroup.parent);
-      } else {
-          setCurrentGroup(menuGroups.find(g => g.id === 'root') || null);
-      }
-  };
-
-  // --- LÓGICA DE CLIC EN PRODUCTO/GRUPO ---
-  const handleProductClick = (item: MenuItem | MenuGroup) => {
-      // 1. Si es un GRUPO (botón de navegación)
-      if ('level' in item) {
-          const group = item as MenuGroup;
-
-          // A. Si tiene reglas de precio (Arma tu Crepa, Hot Cake, Waffle), abrir el modal de personalización
-          if (group.rules_ref) {
-              setGroupToCustomize(group);
-              setIsCustomModalOpen(true); // <-- Modal de Crepas/Postres
-              return;
-          }
-          
-          // B. Si es un grupo de navegación normal (Ej: "Especiales"), navegamos
-          handleNavigate(group.id);
-          return;
-      }
-
-      // 2. Si es un ITEM
-      const menuItem = item as MenuItem;
-
-      // A. Si es un ITEM con variantes (Ej: "Capuccino")
-      if (isVariantPrice(menuItem)) {
-          setItemToSelectVariant(menuItem);
-          setIsVariantModalOpen(true); // <-- Modal de Bebidas/Variantes
-          return;
-      }
-      
-      // B. Si es un ITEM de precio fijo (Ej: "Dulce Tentación")
-      if (isFixedPrice(menuItem)) {
-          const newTicketItem: TicketItem = {
-              id: Date.now().toString(), 
-              baseName: menuItem.name,
-              finalPrice: menuItem.price,
-              type: 'FIXED',
-              details: { itemId: menuItem.id, selectedModifiers: [] }
-          };
-          setTicketItems(prevItems => [...prevItems, newTicketItem]);
-          return;
-      }
-      
-      console.warn("Tipo de producto no manejado:", menuItem);
-  };
-
-  // --- LÓGICA DE MODALES ---
-
-  // Cierre del modal de Crepas/Postres
-  const handleCloseCustomModal = () => {
-    setIsCustomModalOpen(false);
-    setGroupToCustomize(null);
-  };
-
-  // Cierre del modal de Bebidas/Variantes
-  const handleCloseVariantModal = () => {
-    setIsVariantModalOpen(false);
-    setItemToSelectVariant(null);
-  };
-  
-  // Función central para añadir cualquier item (custom, fixed, variant) al ticket
-  const handleAddItemToTicket = (item: TicketItem) => {
-    setTicketItems(prevItems => [...prevItems, item]);
-    
-    // Cierra el modal correcto
-    if (item.type === 'CUSTOM') {
-      handleCloseCustomModal(); 
-    } else if (item.type === 'VARIANT') {
-      handleCloseVariantModal();
-    }
-  };
-  
-  // --- CÁLCULOS PARA LA VISTA ACTUAL ---
-  const groupsToShow = useMemo(() => {
-    if (currentGroup?.id === 'root') { 
-        return menuGroups.filter(g => g.parent === 'root');
-    }
-    return menuGroups.filter(g => g.parent === currentGroup?.id);
-  }, [currentGroup, menuGroups]);
-
-  const itemsToShow = useMemo(() => {
-    if (currentGroup?.items_ref) {
-      return currentGroup.items_ref
-        .map(refId => menuItems.find(item => item.id === refId))
-        .filter((item): item is MenuItem => !!item);
-    }
-    return [];
-  }, [currentGroup, menuItems]);
-  
-  const totalTicket = ticketItems.reduce((sum, item) => sum + item.finalPrice, 0);
-
-  // --- Renderizado ---
-  const appStyle: React.CSSProperties = { display: 'flex', minHeight: '100vh', fontFamily: 'Arial, sans-serif' };
-  const menuStyle: React.CSSProperties = { flex: 3, padding: '20px', backgroundColor: '#f9f9f9' };
-  const contentStyle: React.CSSProperties = { display: 'flex', flexWrap: 'wrap', gap: '10px' };
-  const ticketStyle: React.CSSProperties = { flex: 1, borderLeft: '2px solid #ccc', padding: '20px', backgroundColor: '#fff' };
 
   return (
-    <div style={appStyle}>
+    <div className="app-container">
       
-      {/* SECCIÓN DEL MENÚ CON NAVEGACIÓN */}
-      <div style={menuStyle}>
-        
-        {/* Encabezado y Navegación */}
-        <h2>
-            {currentGroup && currentGroup.parent && (
-                <button onClick={handleGoBack} style={{marginRight: '15px', padding: '8px 12px', cursor: 'pointer', borderRadius: '4px'}}>&lt; Atrás</button>
-            )}
-            {currentGroup ? currentGroup.name : 'Menú Principal'}
-        </h2>
-        <hr style={{width: '100%', borderTop: '1px solid #ddd'}}/>
-
-        {/* Contenido: GRUPOS o ITEMS */}
-        <div style={contentStyle}>
-            {/* 1. GRUPOS HIJOS (Ej: Crepas Dulces, Especiales, Arma tu Crepa) */}
-            {groupsToShow.map(group => (
-                <div 
-                    key={group.id} 
-                    style={{...cardStyle, backgroundColor: group.rules_ref ? '#e6ffe6' : '#e0e0e0', fontWeight: 'bold'}}
-                    onClick={() => handleProductClick(group)} 
-                >
-                    <h3>{group.name}</h3>
-                </div>
-            ))}
-
-            {/* 2. ITEMS VENDIBLES (Ej: Dulce Tentación, Americano) */}
-            {itemsToShow.map(item => (
-              <ProductCard 
-                key={item.id} 
-                item={item} 
-                onClick={handleProductClick} 
-              />
-            ))}
-        </div>
+      {/* Vista de Menú */}
+      <div className="view" style={{ display: view === 'menu' ? 'flex' : 'none' }}>
+        <MenuScreen
+          allData={allData}
+          currentOrderNumber={currentOrderNumber}
+          currentOrderMode={currentOrderMode}
+          onSetOrderMode={setCurrentOrderMode}
+          onOpenCustomModal={(group) => { setGroupToCustomize(group); setIsCustomModalOpen(true); }}
+          onOpenVariantModal={(item) => { setItemToSelectVariant(item); setIsVariantModalOpen(true); }}
+        />
+        <BottomNav ticketCount={ticketItems.length} onNavigate={setView} />
       </div>
 
-      {/* SECCIÓN DEL TICKET */}
-      <div style={ticketStyle}>
-        <h2>Ticket Actual</h2>
-        <div style={{ maxHeight: 'calc(100vh - 150px)', overflowY: 'auto' }}>
-          <ul>
-            {ticketItems.map((item) => (
-              <li key={item.id} style={{ marginBottom: '10px', paddingBottom: '5px', borderBottom: '1px dotted #eee' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span>{item.baseName} {item.details?.variantName && `(${item.details.variantName})`}</span>
-                  <span>${item.finalPrice.toFixed(2)}</span>
-                </div>
-                {item.type === 'CUSTOM' && item.details && (
-                  <small style={{ color: '#666' }}>({item.details.basePriceRule || ''} + {item.details.selectedModifiers.filter(m => m.price > 0).length} extras)</small>
-                )}
-                {item.type === 'VARIANT' && item.details && item.details.selectedModifiers.length > 0 && (
-                   <small style={{ color: '#666' }}>
-                     (+ {item.details.selectedModifiers.map(m => m.name).join(', ')})
-                   </small>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
-        
-        <hr/>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '1.2em' }}>
-            <span>TOTAL:</span>
-            <span>${totalTicket.toFixed(2)}</span>
-        </div>
-        <div style={{ marginTop: '20px' }}>
-          <button 
-            onClick={handleSubmitOrder}
-            disabled={ticketItems.length === 0}
-            style={{ 
-              width: '100%', 
-              padding: '15px', 
-              fontSize: '1.2em', 
-              backgroundColor: ticketItems.length === 0 ? '#ccc' : '#28a745', 
-              color: 'white', 
-              border: 'none', 
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
-          >
-          FINALIZAR ORDEN (${totalTicket.toFixed(2)})
-          </button>
-        </div>
+      {/* Vista de Ticket */}
+      <div className="view" style={{ display: view === 'ticket' ? 'flex' : 'none' }}>
+        <TicketScreen
+          ticketItems={ticketItems}
+          totalTicket={totalTicket}
+          onSubmitOrder={handleSubmitOrder}
+          onNavigate={setView}
+        />
       </div>
       
-      {/* MODAL DE CREPAS/POSTRES (PRICED_BY_INGREDIENT) */}
+      {/* MODALES (viven en App para persistir) */}
       {groupToCustomize && (
           <CustomizeCrepeModal 
               isOpen={isCustomModalOpen}
-              onClose={handleCloseCustomModal}
+              onClose={() => setIsCustomModalOpen(false)}
               group={groupToCustomize} 
-              allModifiers={allModifiers}
-              allPriceRules={allPriceRules} 
+              allModifiers={allData.modifiers}
+              allPriceRules={allData.rules} 
               onAddItem={handleAddItemToTicket}
           />
       )}
-
-      {/* MODAL DE BEBIDAS/VARIANTES (FIXED_PRICE_WITH_VARIANTS) */}
       {itemToSelectVariant && (
           <CustomizeVariantModal 
               isOpen={isVariantModalOpen}
-              onClose={handleCloseVariantModal}
+              onClose={() => setIsVariantModalOpen(false)}
               item={itemToSelectVariant} 
-              allModifiers={allModifiers}
+              allModifiers={allData.modifiers}
               onAddItem={handleAddItemToTicket}
           />
       )}
@@ -340,15 +198,244 @@ function App() {
   );
 }
 
-const cardStyle: React.CSSProperties = { 
-    border: '1px solid #ccc',
-    borderRadius: '8px',
-    padding: '16px',
-    margin: '8px',
-    width: '150px',
-    cursor: 'pointer',
-    textAlign: 'center',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+// --- PANTALLA DE MENÚ (Sub-componente) ---
+
+interface MenuScreenProps {
+  allData: { groups: MenuGroup[], items: MenuItem[] };
+  currentOrderNumber: number;
+  currentOrderMode: OrderMode;
+  onSetOrderMode: (mode: OrderMode) => void;
+  onOpenCustomModal: (group: MenuGroup) => void;
+  onOpenVariantModal: (item: MenuItem) => void;
+}
+
+const MenuScreen: React.FC<MenuScreenProps> = ({ 
+  allData, 
+  currentOrderNumber, 
+  currentOrderMode, 
+  onSetOrderMode,
+  onOpenCustomModal,
+  onOpenVariantModal
+}) => {
+  
+  const [currentGroup, setCurrentGroup] = useState<MenuGroup | null>(null);
+
+  useEffect(() => {
+    if (allData.groups.length > 0 && !currentGroup) {
+      setCurrentGroup(allData.groups.find(g => g.id === 'root') || null);
+    }
+  }, [allData.groups, currentGroup]);
+
+  const handleNavigate = (groupId: string) => {
+    setCurrentGroup(allData.groups.find(g => g.id === groupId) || null);
+  };
+  
+  const handleGoBack = () => {
+    if (currentGroup?.parent) handleNavigate(currentGroup.parent);
+    else setCurrentGroup(allData.groups.find(g => g.id === 'root') || null);
+  };
+
+  const handleProductClick = (item: MenuItem | MenuGroup) => {
+      if ('level' in item) {
+          const group = item as MenuGroup;
+          if (group.rules_ref) {
+              onOpenCustomModal(group);
+              return;
+          }
+          handleNavigate(group.id);
+          return;
+      }
+      const menuItem = item as MenuItem;
+      if (isVariantPrice(menuItem) || (isFixedPrice(menuItem) && menuItem.modifierGroups && menuItem.modifierGroups.length > 0)) {
+          onOpenVariantModal(menuItem);
+          return;
+      }
+      // (Si llegamos aquí, es un item fijo sin modificadores, lo cual ya no tenemos en el menú de bebidas)
+  };
+
+  const groupsToShow = useMemo(() => {
+    if (currentGroup?.id === 'root') return allData.groups.filter(g => g.parent === 'root');
+    return allData.groups.filter(g => g.parent === currentGroup?.id);
+  }, [currentGroup, allData.groups]);
+
+  const itemsToShow = useMemo(() => {
+    if (currentGroup?.items_ref) {
+      return currentGroup.items_ref
+        .map(refId => allData.items.find(item => item.id === refId))
+        .filter((item): item is MenuItem => !!item);
+    }
+    return [];
+  }, [currentGroup, allData.items]);
+
+  return (
+    <>
+      <header className="header-bar">
+        {/* <img src="/logo.png" alt="Logo" className="header-logo" /> */}
+        <span className="header-order-id">Orden #{currentOrderNumber.toString().padStart(3, '0')}</span>
+        {(['Mesa 1', 'Mesa 2', 'Para Llevar'] as OrderMode[]).map(mode => (
+          <button 
+            key={mode} 
+            className={`btn-order-type ${currentOrderMode === mode ? 'active' : ''}`}
+            onClick={() => onSetOrderMode(mode)}
+          >
+            {mode}
+          </button>
+        ))}
+      </header>
+
+      <div className="menu-content">
+        <div className="menu-header">
+            {currentGroup && currentGroup.parent && (
+                <button onClick={handleGoBack} className="btn-back">&larr;</button>
+            )}
+            <h2>{currentGroup ? currentGroup.name : 'Cargando Menú...'}</h2>
+        </div>
+
+        <div className="menu-list">
+            {groupsToShow.map(group => (
+                <MenuButton 
+                  key={group.id} 
+                  item={group} 
+                  onClick={() => handleProductClick(group)} 
+                />
+            ))}
+            {itemsToShow.map(item => (
+              <MenuButton 
+                key={item.id} 
+                item={item} 
+                onClick={() => handleProductClick(item)} 
+              />
+            ))}
+        </div>
+      </div>
+    </>
+  );
 };
+
+// --- PANTALLA DE TICKET (Sub-componente) ---
+
+interface TicketScreenProps {
+  ticketItems: TicketItem[];
+  totalTicket: number;
+  onSubmitOrder: () => void;
+  onNavigate: (view: View) => void;
+}
+
+const TicketScreen: React.FC<TicketScreenProps> = ({ ticketItems, totalTicket, onSubmitOrder, onNavigate }) => {
+  return (
+    <>
+      <header className="ticket-header">
+        <button onClick={() => onNavigate('menu')} className="btn-back">&larr;</button>
+        <h2>Pedido Actual</h2>
+      </header>
+      
+      <div className="ticket-scroll-area">
+        {ticketItems.length === 0 ? (
+          <div className="ticket-placeholder">
+            <p>Agrega productos para iniciar un pedido.</p>
+          </div>
+        ) : (
+          <ul className="ticket-list">
+            {ticketItems.map((item) => (
+              <li key={item.id} className="ticket-item">
+                <div className="ticket-item-header">
+                  <span>{item.baseName} {item.details?.variantName && `(${item.details.variantName})`}</span>
+                  <span>${item.finalPrice.toFixed(2)}</span>
+                </div>
+                {item.details && item.details.selectedModifiers.length > 0 && (
+                  <ul className="ticket-item-details">
+                    {item.details.selectedModifiers.map(mod => (
+                        <li key={mod.id}>
+                            {mod.name} {mod.price > 0 ? `(+$${mod.price.toFixed(2)})` : ''}
+                        </li>
+                    ))}
+                  </ul>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+      
+      <div className="ticket-footer">
+        <div className="ticket-total">
+            <span>TOTAL:</span>
+            <span>${totalTicket.toFixed(2)}</span>
+        </div>
+        <div>
+            <button 
+                onClick={onSubmitOrder}
+                disabled={ticketItems.length === 0}
+                className="btn-submit-order"
+            >
+                Cobrar y Enviar a Cocina (${totalTicket.toFixed(2)})
+            </button>
+        </div>
+      </div>
+    </>
+  );
+};
+
+// --- BARRA DE NAVEGACIÓN INFERIOR (Sub-componente) ---
+
+interface BottomNavProps {
+  ticketCount: number;
+  onNavigate: (view: View) => void;
+}
+
+const BottomNav: React.FC<BottomNavProps> = ({ ticketCount, onNavigate }) => {
+  return (
+    <nav className="bottom-nav">
+      <button className="nav-button" onClick={() => onNavigate('menu')}>
+        Menú
+      </button>
+      <button className="nav-button" onClick={() => onNavigate('ticket')}>
+        Ver Ticket
+        {ticketCount > 0 && <span className="badge">{ticketCount}</span>}
+      </button>
+    </nav>
+  );
+};
+
+// --- BOTÓN DE MENÚ (Sub-componente) ---
+
+function getIconForItem(item: MenuItem | MenuGroup): string {
+    if ('level' in item) { // Es un Grupo
+        if (item.rules_ref) return '✨'; // Arma tu...
+        if (item.id.includes('dulces')) return '🥞';
+        if (item.id.includes('saladas')) return '🥓';
+        if (item.id.includes('bebidas_frias')) return '🧊';
+        if (item.id.includes('bebidas_calientes')) return '☕';
+        if (item.id.includes('bebidas')) return '🥤';
+        if (item.id.includes('postres')) return '🍰';
+        return '➡️';
+    }
+    // Es un Item
+    if (item.category.includes('Calientes')) return '☕';
+    if (item.id.includes('bublee')) return '🧋';
+    if (item.category.includes('Frias')) return '🧊';
+    if (item.category.includes('Dulces')) return '🥞';
+    if (item.category.includes('Saladas')) return '🥓';
+    if (item.category.includes('Postres')) return '🍮';
+    return '🍽️';
+}
+
+interface MenuButtonProps {
+  item: MenuItem | MenuGroup;
+  onClick: () => void;
+}
+
+const MenuButton: React.FC<MenuButtonProps> = ({ item, onClick }) => {
+    let className = 'btn-menu-item';
+    if ('level' in item) {
+        className += item.rules_ref ? ' rule' : ' category';
+    }
+    return (
+        <button className={className} onClick={onClick}>
+            <span className="btn-menu-item-icon">{getIconForItem(item)}</span>
+            {item.name.split('(')[0]}
+        </button>
+    );
+}
 
 export default App;

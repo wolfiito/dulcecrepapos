@@ -1,10 +1,11 @@
-/* src/App.css (Corregido para Acordeón + Grid) */
+/* src/App.css (Corregido para Header más grande, Footer fijo y Subheader sticky) */
 :root {
   --brand-primary: #D9538A; 
   --brand-secondary: #E5739F;
   --bg-main: #F4F4F7;
   --bg-surface: #FFFFFF;
   --accent-success: #4CAF50;
+  --accent-danger: #D9534F;
   --accent-disabled: #BDBDBD;
   --text-primary: #212121;
   --text-secondary: #757575;
@@ -34,12 +35,13 @@ body {
   background-color: var(--bg-main);
 }
 
-/* --- 4. Pantalla de Menú --- */
+/* --- Pantalla de Menú --- */
 .header-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 15px;
+  /* --- MEJORA #1 (Header más grande) --- */
+  padding: 15px 20px; 
   background-color: var(--bg-surface);
   border-bottom: 2px solid var(--bg-main);
   flex-shrink: 0;
@@ -47,7 +49,7 @@ body {
   gap: 10px;
 }
 .header-logo {
-  height: 40px;
+  height: 45px; /* Ligeramente más grande */
   width: auto;
 }
 .order-type-group {
@@ -71,69 +73,52 @@ body {
 
 .menu-content {
   padding: 15px;
-  overflow-y: auto;
+  overflow-y: auto; /* El contenedor del scroll */
   flex-grow: 1;
 }
 
-/* --- Estilos del Acordeón --- */
-.accordion-category {
-  margin-bottom: 10px;
-  border-radius: 8px;
-  background-color: var(--bg-surface);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-  overflow: hidden;
-}
-.accordion-header {
+.menu-header {
   display: flex;
   align-items: center;
-  width: 100%;
-  padding: 15px;
-  font-size: 1.3em;
-  font-weight: 600;
-  text-align: left;
-  border: none;
-  background-color: var(--bg-surface);
-  color: var(--text-primary);
-  cursor: pointer;
-  border-bottom: 1px solid var(--color-border);
-}
-.accordion-header:hover { background-color: #f9f9f9; }
-.accordion-title {
-  flex-grow: 1;
-  margin-left: 15px;
-}
-.accordion-icon {
-  font-size: 1.5em;
-  font-weight: bold;
-  color: var(--brand-primary);
-  transition: transform 0.2s ease;
-}
-.accordion-header.open .accordion-icon {
-  transform: rotate(45deg);
-}
-.accordion-content {
-  padding: 15px;
-  border-top: 1px solid var(--bg-main);
+  margin-bottom: 20px;
+  
+  /* --- MEJORA #3 (Subheader Fijo) --- */
+  position: sticky;
+  top: -15px; /* Compensa el padding del padre */
+  padding-top: 15px; /* Añade el padding aquí */
+  background-color: var(--bg-main); /* Necesario para que el scroll no se vea por debajo */
+  z-index: 10;
 }
 
-/* --- ¡AQUÍ ESTÁ LA CORRECCIÓN! --- */
-/* (Restauramos el Grid para los ítems) */
+.menu-header h2 {
+  margin: 0;
+  font-size: 1.8em;
+  color: var(--text-primary);
+}
+
+/* --- Cuadrícula de 2 columnas --- */
 .menu-grid {
   display: grid;
-  /* Grid responsivo: se ajusta al tamaño */
-  grid-template-columns: repeat(auto-fill, minmax(105px, auto));
-  gap: 10px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
 }
+
+@media (min-width: 768px) {
+  .menu-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
+}
+
 .card-base {
   border: 1px solid var(--color-border);
-  border-radius: 30px;
-  padding: 5px;
+  border-radius: 8px;
+  padding: 16px;
   cursor: pointer;
   text-align: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
   transition: transform 0.1s ease, box-shadow 0.1s ease;
   background-color: var(--bg-surface);
-  min-height: 120px; /* Altura mínima para alinear */
+  min-height: 120px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -153,12 +138,12 @@ body {
 }
 .card-item h4 {
   margin: 0 0 5px 0;
-  font-size: 1.1em;
+  font-size: 1em;
   color: var(--color-primary);
 }
 .card-item p {
   margin: 0;
-  font-size: 1.1em;
+  font-size: 1em;
   font-weight: bold;
 }
 .card-item small {
@@ -166,7 +151,7 @@ body {
   color: var(--text-secondary);
 }
 
-/* --- Pantalla de Ticket (Sin cambios) --- */
+/* --- Pantalla de Ticket --- */
 .ticket-view { background-color: var(--bg-surface); }
 .ticket-header {
   display: flex;
@@ -183,6 +168,7 @@ body {
   font-weight: bold;
   color: var(--brand-primary);
 }
+
 .btn-back {
   background-color: var(--bg-surface);
   border: 1px solid var(--color-border);
@@ -214,15 +200,17 @@ body {
 }
 .ticket-list { padding-left: 0; list-style: none; margin: 0; }
 .ticket-item {
-  margin-bottom: 15px;
-  padding-bottom: 10px;
-  border-bottom: 1px dashed var(--text-secondary);
+  position: relative;
+  overflow: hidden;
+  background-color: var(--accent-danger);
 }
+
 .ticket-item-header {
   display: flex;
   justify-content: space-between;
   font-size: 1.1em;
 }
+
 .ticket-item-header span:first-child {
   font-weight: bold;
   color: var(--text-primary);
@@ -231,7 +219,7 @@ body {
   font-size: 0.9em;
   color: var(--text-secondary);
   margin: 5px 0 0 10px;
-  padding-left: 15px;
+  padding-left: 30px; /* Alineado con el padding del header */
   list-style: circle;
 }
 .ticket-footer {
@@ -264,7 +252,8 @@ body {
   cursor: not-allowed;
 }
 
-/* --- Barra de Navegación Inferior (Restaurada) --- */
+/* --- MEJORA #2 (Footer Fijo) --- */
+/* (La lógica de .view, .menu-content y .bottom-nav ya asegura esto) */
 .bottom-nav {
   flex-shrink: 0;
   display: flex;
@@ -378,4 +367,56 @@ body {
 .btn-primary:disabled {
   background-color: var(--accent-disabled);
   cursor: not-allowed;
+}
+
+.ticket-item {
+  position: relative;
+  overflow: hidden; /* Oculta el fondo rojo */
+}
+
+/* El fondo rojo que se revela */
+.delete-action-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0; /* Ocupa todo el ancho */
+  bottom: 0;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end; /* Alinea el icono a la derecha */
+  padding-right: 30px; /* Espacio para el icono */
+  font-size: 1.5em;
+  z-index: 0; /* Capa 0 (Fondo) */
+}
+
+/* El contenido deslizable (el ítem real) */
+.ticket-item-content {
+  position: relative;
+  background-color: var(--bg-surface);
+  padding-bottom: 10px;
+  border-bottom: 1px dashed var(--text-secondary); 
+  z-index: 1; /* Capa 1 (Encima) */
+}
+
+/* (El .ticket-item-header y .ticket-item-details van DENTRO del content) */
+.ticket-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  font-size: 1.1em;
+  padding: 10px 15px 0 15px; /* Padding para el contenido */
+}
+
+.ticket-item-info {
+  flex-grow: 1;
+}
+
+.ticket-item-info span:first-child {
+  font-weight: bold;
+  color: var(--text-primary);
+}
+.ticket-item-price {
+  font-weight: bold;
+  margin-left: 10px;
 }

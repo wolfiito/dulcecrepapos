@@ -1,42 +1,308 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+/* 🎨 --- KDS Dulce Crepa - Estilos Responsivos --- */
+
+:root {
+  --bg-dark: #111827;
+  --card-bg: #1f2937;
+  --primary: #2563eb;
+  --success: #16a34a;
+  --warning: #facc15;
+  --danger: #ef4444;
+  --text-light: #ffffff;
+  --text-muted: #9ca3af;
+  --radius: 1rem;
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --transition: all 0.2s ease;
+}
+
+/* --- Layout Principal --- */
+
+body {
+  margin: 0;
+  font-family: 'Inter', 'Poppins', sans-serif;
+  background-color: var(--bg-dark);
+  color: var(--text-light);
+  overflow: hidden;
+}
+
+.App {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* --- Pantalla de bienvenida --- */
+
+.kds-welcome-screen {
+  height: 100vh;
+  background-color: var(--bg-dark);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: var(--text-light);
+  font-size: 1.5rem;
   text-align: center;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.kds-welcome-screen p {
+  margin-top: 1rem;
+  font-size: 1.2rem;
+  color: var(--text-muted);
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
+/* --- Header del KDS --- */
+
+.kds-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #1e293b;
+  padding: 0.75rem 1.5rem;
+  box-shadow: var(--shadow);
+}
+
+.kds-logo {
+  height: 50px;
+  border-radius: 12px;
+}
+
+.kds-station-name {
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.kds-clock {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.connection-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  color: var(--text-light);
+}
+
+.connection-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--danger);
+}
+
+.connection-dot.connected {
+  background: var(--success);
+}
+
+/* --- GRID de Pedidos --- */
+
+.order-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+  padding: 1rem;
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* 💻 Monitores grandes (1920px o más) → 6 columnas */
+@media (min-width: 1920px) {
+  .order-grid {
+    grid-template-columns: repeat(6, 1fr);
   }
-  to {
-    transform: rotate(360deg);
+}
+
+/* 💻 Laptop / Tablet horizontal (1366px o más) → 5 columnas */
+@media (min-width: 1366px) and (max-width: 1919px) {
+  .order-grid {
+    grid-template-columns: repeat(5, 1fr);
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
+/* 📱 Tablet horizontal estándar (1024px – 1365px) → 4 columnas */
+@media (min-width: 1024px) and (max-width: 1365px) {
+  .order-grid {
+    grid-template-columns: repeat(4, 1fr);
   }
 }
 
-.card {
-  padding: 2em;
+/* 📱 Tablet vertical (768px – 1023px) → 3 columnas */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .order-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
-.read-the-docs {
-  color: #888;
+/* 📱 Móviles (menor a 768px) → 1–2 columnas */
+@media (max-width: 767px) {
+  .order-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  @media (max-width: 480px) {
+    .order-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+/* --- Tarjeta de Orden --- */
+
+.order-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: var(--card-bg);
+  color: var(--text-light);
+  border-radius: var(--radius);
+  padding: 1rem;
+  min-height: 260px;
+  max-height: 400px;
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+  border: 2px solid transparent;
+}
+
+.order-card:hover {
+  transform: translateY(-4px);
+}
+
+.order-card.alert {
+  border-color: var(--danger);
+  animation: pulse-alert 1.5s infinite;
+}
+
+@keyframes pulse-alert {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+/* --- Encabezado de Orden --- */
+
+.order-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.order-number {
+  font-size: 1.8rem;
+  font-weight: 800;
+}
+
+.order-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.order-type {
+  font-size: 1rem;
+  color: var(--warning);
+}
+
+.order-time {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.alert-time {
+  color: var(--danger);
+}
+
+/* --- Lista de Ítems --- */
+
+.kds-item-list {
+  flex-grow: 1;
+  overflow-y: auto;
+  margin-bottom: 0.5rem;
+  padding-right: 0.25rem;
+}
+
+.kds-item {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.kds-item-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.kds-item-details {
+  margin: 0.25rem 0 0 0;
+  padding-left: 1rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.kds-item-details .extra {
+  color: var(--success);
+  font-weight: 600;
+}
+
+/* --- Botones de acción --- */
+
+.card-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  position: sticky;
+  bottom: 0;
+  background: var(--card-bg);
+  padding-top: 0.5rem;
+}
+
+.btn-action {
+  flex: 1;
+  font-size: 1rem;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.btn-action:hover {
+  transform: scale(1.05);
+}
+
+.btn-preparar {
+  background: var(--primary);
+  color: white;
+}
+
+.btn-preparar:disabled {
+  background: #1e3a8a;
+  opacity: 0.6;
+}
+
+.btn-listo {
+  background: var(--success);
+  color: white;
+}
+
+.btn-listo:disabled {
+  background: #14532d;
+  opacity: 0.6;
+}
+
+/* --- Estados de pedido --- */
+
+.status-PENDING {
+  border-left: 5px solid var(--warning);
+}
+
+.status-PREPARING {
+  border-left: 5px solid var(--primary);
+}
+
+.status-READY {
+  border-left: 5px solid var(--success);
 }

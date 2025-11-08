@@ -19,6 +19,7 @@ import type {
 import { CustomizeCrepeModal } from './components/CustomizeCrepeModal'; 
 import { CustomizeVariantModal } from './components/CustomizeVariantModal'; 
 import { ProductCard } from './components/ProductCard'; // <-- Importamos ProductCard
+import { TicketItemCard } from './components/TicketItemCard';
 
 // --- Tipos de Vista ---
 type View = 'menu' | 'ticket';
@@ -168,7 +169,9 @@ function App() {
     setView('menu');
     handleNavigate('root');
   };
-  
+  const handleRemoveTicketItem = (ticketItemId: string) => {
+    setTicketItems(prevItems => prevItems.filter(item => item.id !== ticketItemId));
+  };
   // --- LÓGICA DE ORDEN (AUTO-INCREMENTO) ---
   const handleSubmitOrder = async () => {
     if (ticketItems.length === 0) return;
@@ -260,6 +263,7 @@ function App() {
           onSubmitOrder={handleSubmitOrder}
           currentOrderNumber={currentOrderNumber}
           onNavigate={setView}
+          onRemoveItem={handleRemoveTicketItem}
         />
       </div>
       
@@ -387,9 +391,17 @@ interface TicketScreenProps {
   onSubmitOrder: () => void;
   currentOrderNumber: number;
   onNavigate: (view: View) => void;
+  onRemoveItem: (id: string) => void;
 }
 
-const TicketScreen: React.FC<TicketScreenProps> = ({ ticketItems, totalTicket, onSubmitOrder, currentOrderNumber, onNavigate }) => {
+const TicketScreen: React.FC<TicketScreenProps> = ({ 
+  ticketItems, 
+  totalTicket, 
+  onSubmitOrder, 
+  currentOrderNumber, 
+  onNavigate, 
+  onRemoveItem
+}) => {
   return (
     <>
       <header className="ticket-header">
@@ -408,21 +420,11 @@ const TicketScreen: React.FC<TicketScreenProps> = ({ ticketItems, totalTicket, o
         ) : (
           <ul className="ticket-list">
             {ticketItems.map((item) => (
-              <li key={item.id} className="ticket-item">
-                <div className="ticket-item-header">
-                  <span>{item.baseName} {item.details?.variantName && `(${item.details.variantName})`}</span>
-                  <span>${item.finalPrice.toFixed(2)}</span>
-                </div>
-                {item.details && item.details.selectedModifiers.length > 0 && (
-                  <ul className="ticket-item-details">
-                    {item.details.selectedModifiers.map(mod => (
-                        <li key={mod.id}>
-                            {mod.name} {mod.price > 0 ? `(+$${mod.price.toFixed(2)})` : ''}
-                        </li>
-                    ))}
-                  </ul>
-                )}
-              </li>
+              <TicketItemCard 
+              key={item.id} 
+              item={item} 
+              onRemove={onRemoveItem} 
+            />
             ))}
           </ul>
         )}
